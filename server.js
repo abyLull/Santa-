@@ -7,7 +7,10 @@ const createStore = require('./store');
 
 const PORT = process.env.PORT || 3000;
 const store = createStore();
-const INDEX = fs.readFileSync(path.join(__dirname, 'public', 'index.html'));
+// index.html может лежать в public/ или рядом с server.js (удобно при загрузке файлов через сайт GitHub)
+const INDEX = fs.readFileSync(
+  [path.join(__dirname, 'public', 'index.html'), path.join(__dirname, 'index.html')].find((f) => fs.existsSync(f))
+);
 
 /* ---------------- утилиты ---------------- */
 class HttpError extends Error {
