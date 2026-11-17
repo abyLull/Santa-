@@ -63,7 +63,7 @@ function adminGame(g) {
   // Организатор видит участников и прогресс, но НЕ пары.
   return {
     ...publicGame(g),
-    players: g.players.map((p) => ({ id: p.id, name: p.name, hasWish: !!p.wish, seen: !!p.seen })),
+    players: g.players.map((p) => ({ id: p.id, name: p.name, hasWish: !!p.wish, seen: !!p.seen, pinReset: !!p.mustChangePin })),
   };
 }
 
@@ -121,6 +121,7 @@ const routes = [
     const name = cleanText(body.name, 40);
     if (!name) fail(400, 'Введите имя');
     checkPin(body.pin);
+    if (String(body.pin) === '0000') fail(400, 'PIN 0000 зарезервирован для сброса, придумайте другой');
     return mutate(id, (g) => {
       if (g.status !== 'open') fail(409, 'Жеребьёвка уже прошла, новых участников добавить нельзя');
       if (g.players.length >= 100) fail(409, 'Слишком много участников');
@@ -148,7 +149,7 @@ const routes = [
         return { error: 'Неверный PIN' };
       }
       p.fails = 0;
-      return { playerId: p.id, token: issueToken(p) };
+      return { playerId: p.id, token: issueToken(p), mustChangePin: !!p.mustChangePin };
     });
   }],
 
@@ -166,7 +167,7 @@ const routes = [
     }
     return {
       game: publicGame(g),
-      me: { id: me.id, name: me.name, wish: me.wish || '' },
+      me: { id: me.id, name: me.name, wish: me.wish || '', mustChangePin: !!me.mustChangePin },
       recipient,
     };
   }],
@@ -186,6 +187,19 @@ const routes = [
       const me = findPlayerByToken(g, req);
       if (g.status !== 'open') fail(409, 'После жеребьёвки выйти нельзя — попросите организатора');
       g.players = g.players.filter((p) => p.id !== me.id);
+      return { ok: true };
+    });
+  }],
+
+  // сменить свой PIN (обязательно после сброса организатором)
+  ['PUT', /^\/api\/games\/([a-z0-9]+)\/me\/pin$/, async (req, body, [id]) => {
+    checkPin(body.pin);
+    if (String(body.pin) === '0000') fail(400, 'Придумайте PIN, отличный от 0000');
+    return mutate(id, (g) => {
+      const me = findPlayerByToken(g, req);
+      me.salt = crypto.randomBytes(8).toString('hex');
+      me.pinHash = hashPin(body.pin, me.salt);
+      me.mustChangePin = false;
       return { ok: true };
     });
   }],
@@ -226,6 +240,21 @@ const routes = [
       requireAdmin(g, req);
       g.pairs = null; g.status = 'open';
       g.players.forEach((p) => { p.seen = false; });
+      return adminGame(g);
+    });
+  }],
+
+  // сбросить PIN участника на 0000: все его сессии закрываются, при входе он задаст новый PIN
+  ['POST', /^\/api\/games\/([a-z0-9]+)\/admin\/players\/([a-z0-9]+)\/reset-pin$/, async (req, body, [id, pid]) => {
+    return mutate(id, (g) => {
+      requireAdmin(g, req);
+      const p = g.players.find((x) => x.id === pid);
+      if (!p) fail(404, 'Участник не найден');
+      p.salt = crypto.randomBytes(8).toString('hex');
+      p.pinHash = hashPin('0000', p.salt);
+      p.mustChangePin = true;
+      p.fails = 0; p.lockedUntil = 0;
+      p.tokenHashes = [];
       return adminGame(g);
     });
   }],
