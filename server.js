@@ -427,6 +427,14 @@ const routes = [
     });
   }],
 
+  // удалить игру целиком (подтверждение — названием игры)
+  ['DELETE', /^\/api\/games\/([a-z0-9]+)\/admin$/, async (req, body, [id]) => {
+    const g = await loadOr404(id);
+    requireAdmin(g, req);
+    await store.remove(id);
+    return { ok: true };
+  }],
+
   // новый резервный код организатора (старый перестаёт работать)
   ['POST', /^\/api\/games\/([a-z0-9]+)\/admin\/recovery$/, async (req, body, [id]) => {
     return mutate(id, (g) => {
@@ -503,6 +511,14 @@ const server = http.createServer(async (req, res) => {
 // Бесплатный Render засыпает после 15 минут без запросов. Пока сервис работает,
 // в рабочие часы он сам себя «пингует» раз в 10 минут. Ночью засыпает, чтобы
 // не тратить общий лимит бесплатных часов. KEEP_AWAKE=0 — выключить, KEEP_AWAKE_HOURS=9-21 — часы по Астане.
+// автоочистка: раз в сутки удаляем игры без активности дольше 90 дней (CLEANUP_DAYS — изменить срок)
+function scheduleCleanup() {
+  const days = Number(process.env.CLEANUP_DAYS || 90);
+  const run = () => store.cleanup(days).then((n) => { if (n) console.log(`cleanup: удалено старых игр: ${n}`); }).catch((e) => console.error('cleanup:', e.message));
+  run();
+  setInterval(run, 24 * 60 * 60 * 1000).unref();
+}
+
 function keepAwake() {
   const url = process.env.RENDER_EXTERNAL_URL;
   if (!url || process.env.KEEP_AWAKE === '0') return;
@@ -515,5 +531,5 @@ function keepAwake() {
 }
 
 store.init()
-  .then(() => server.listen(PORT, () => { console.log(`Secret Santa on :${PORT} (store: ${store.kind})`); keepAwake(); }))
+  .then(() => server.listen(PORT, () => { console.log(`Secret Santa on :${PORT} (store: ${store.kind})`); keepAwake(); scheduleCleanup(); }))
   .catch((e) => { console.error('Не удалось подключиться к базе:', e.message); process.exit(1); });

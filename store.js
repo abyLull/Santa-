@@ -17,6 +17,10 @@ function createMemoryStore() {
     async get(id) {
       return clone(games.get(id));
     },
+    async remove(id) {
+      return games.delete(id);
+    },
+    async cleanup() { return 0; },
     // fn(game) может изменить игру и вернуть результат; изменения сохраняются атомарно
     async update(id, fn) {
       const prev = locks.get(id) || Promise.resolve();
@@ -59,6 +63,15 @@ function createPgStore(url) {
     async get(id) {
       const r = await pool.query('SELECT data FROM santa_games WHERE id = $1', [id]);
       return r.rows[0] ? r.rows[0].data : null;
+    },
+    async remove(id) {
+      const r = await pool.query('DELETE FROM santa_games WHERE id = $1', [id]);
+      return r.rowCount > 0;
+    },
+    // игры без активности дольше days дней удаляются, чтобы база не разрасталась
+    async cleanup(days) {
+      const r = await pool.query(`DELETE FROM santa_games WHERE updated_at < now() - ($1 || ' days')::interval`, [String(days)]);
+      return r.rowCount;
     },
     async update(id, fn) {
       const client = await pool.connect();

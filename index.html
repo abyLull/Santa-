@@ -133,23 +133,24 @@
   .num{font-family:var(--display);font-weight:700;font-size:13px;min-width:24px;height:24px;padding:0 7px;border-radius:999px;background:var(--ink);color:#fff;display:inline-grid;place-items:center;font-variant-numeric:tabular-nums}
 
   /* ---------- поля с всплывающей подписью ---------- */
-  .fld{position:relative;margin-bottom:10px}
+  .fld{position:relative;margin-bottom:14px}
+  .fld label{display:block;font-size:13.5px;font-weight:600;color:var(--muted);margin:0 0 6px 2px;transition:color .2s}
+  .fld:focus-within label{color:var(--accent)}
+  .fld .box{position:relative}
   .fld input,.fld textarea,.fld select{width:100%;font:inherit;font-size:16px;color:var(--ink);background:var(--bg);border:1.5px solid transparent;border-radius:16px;
-    padding:24px 16px 9px;transition:border-color .2s,background .2s,box-shadow .25s;appearance:none;-webkit-appearance:none}
-  .fld textarea{min-height:104px;resize:none;line-height:1.45}
-  .fld label{position:absolute;left:17px;top:17px;font-size:16px;color:var(--muted);pointer-events:none;transform-origin:0 0;transition:transform .25s var(--out),color .2s}
+    padding:14px 16px;transition:border-color .2s,background .2s,box-shadow .25s;appearance:none;-webkit-appearance:none}
+  .fld input::placeholder,.fld textarea::placeholder{color:var(--faint)}
+  .fld textarea{min-height:104px;max-height:240px;resize:none;line-height:1.45;overflow-y:auto}
   .fld input:focus,.fld textarea:focus,.fld select:focus{outline:none;background:#fff;border-color:var(--accent);box-shadow:0 0 0 5px rgba(74,92,255,.13)}
-  .fld input:focus+label,.fld input:not(:placeholder-shown)+label,
-  .fld textarea:focus+label,.fld textarea:not(:placeholder-shown)+label,
-  .fld select+label{transform:translateY(-10px) scale(.78);color:var(--muted)}
-  .fld input:focus+label,.fld textarea:focus+label{color:var(--accent)}
-  .fld .count{position:absolute;right:14px;bottom:10px;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums}
-  .fld.sel::after{content:'';position:absolute;right:18px;top:26px;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);pointer-events:none}
+  .fld .meta{display:flex;gap:12px;align-items:flex-start;margin:6px 2px 0}
+  .fld .hint{flex:1;font-size:12.5px;color:var(--muted);margin:0;line-height:1.4}
+  .fld .count{margin-left:auto;font-size:12px;color:var(--faint);font-variant-numeric:tabular-nums;white-space:nowrap;line-height:1.5}
+  .fld.sel .box::after{content:'';position:absolute;right:18px;top:50%;margin-top:-6px;width:8px;height:8px;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(45deg);pointer-events:none}
   .pair{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
   /* ---------- PIN ---------- */
   .pin{position:relative;margin:4px 0 12px}
-  .pin-cap{font-size:13px;color:var(--muted);margin:0 0 8px 2px}
+  .pin-cap{font-size:13.5px;font-weight:600;color:var(--muted);margin:0 0 6px 2px}
   .pin input{position:absolute;inset:0;opacity:0;width:100%;height:100%;font-size:16px;caret-color:transparent;z-index:2}
   .cells{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
   .cell{height:58px;border-radius:16px;background:var(--bg);border:1.5px solid transparent;display:grid;place-items:center;transition:border-color .2s,background .2s,transform .3s var(--spring)}
@@ -298,11 +299,29 @@
   .toast.show{transform:translate(-50%,0);visibility:visible}
   .foot{text-align:center;font-size:12.5px;color:var(--faint);margin-top:26px;line-height:1.6}
   .hidden{display:none!important}
+  /* шкала этапов игры */
+  .stepper{display:flex;align-items:flex-start;width:min(100%,400px);margin:18px 0 0;padding:0;list-style:none}
+  .stepper li{flex:1;position:relative;text-align:center;font-size:11.5px;font-weight:600;color:var(--faint);line-height:1.25}
+  .stepper li::before{content:'';position:absolute;top:10px;left:-50%;right:50%;height:2px;background:var(--line);z-index:0}
+  .stepper li:first-child::before{display:none}
+  .stepper li.done::before,.stepper li.cur::before{background:var(--accent)}
+  .stepper i{position:relative;z-index:1;display:grid;place-items:center;width:22px;height:22px;margin:0 auto 6px;border-radius:50%;background:var(--surface);border:2px solid var(--line);
+    font-style:normal;font-size:11px;font-weight:800;color:var(--faint)}
+  .stepper li.done{color:var(--muted)}
+  .stepper li.done i{background:var(--accent);border-color:var(--accent);color:#fff}
+  .stepper li.cur{color:var(--ink)}
+  .stepper li.cur i{border-color:var(--accent);color:var(--accent);box-shadow:0 0 0 5px rgba(74,92,255,.15);animation:pulse2 2s ease-in-out infinite}
+  @keyframes pulse2{50%{box-shadow:0 0 0 9px rgba(74,92,255,0)}}
+  .next{display:flex;gap:12px;align-items:flex-start;background:var(--accent-soft);border-radius:18px;padding:14px 16px;margin-bottom:14px;text-align:left}
+  .next b{display:block;font-size:13px;color:var(--accent);margin-bottom:2px}
+  .next p{margin:0;font-size:14.5px;line-height:1.45;color:var(--ink)}
+  .next .ic{font-size:20px;line-height:1}
+  .danger{border:1.5px dashed rgba(214,69,93,.35);border-radius:22px;padding:18px 18px 16px;margin-top:8px}
+  .danger h2{color:var(--danger)}
   .center{text-align:center}
 
   /* ---------- дата, отсчёт ---------- */
-  .fld.always label{transform:translateY(-10px) scale(.78)}
-  .fld input[type=date]{min-height:58px}
+  .fld input[type=date]{min-height:52px}
   .fact.cd{background:var(--ink);color:#fff;border-color:transparent}
   .countdown{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:14px;font-weight:600;color:var(--accent);position:relative}
 
@@ -586,7 +605,21 @@
     'Тайный Санта команды E-license':'E-license командасының Жасырын Сантасы','Подайте заявку на участие 🎁':'Қатысуға өтініш беріңіз 🎁','QR-код':'QR-код',
     'Наведите камеру телефона на QR-код':'Телефон камерасын QR-кодқа бағыттаңыз','Распечатать':'Басып шығару','Тайный Санта':'Жасырын Санта','Загружаем…':'Жүктелуде…',
     'Пары знает только сервер, даже организатор их не видит.':'Жұптарды тек сервер біледі, оларды тіпті ұйымдастырушы да көрмейді.',
-    'Ночная тема':'Түнгі тақырып','Спросить получателя':'Алушыдан сұрау','Удалить заявку?':'Өтінішті жоясыз ба?',
+    'Ночная тема':'Түнгі тақырып','Название игры':'Ойын атауы','Например, Айгерим':'Мысалы, Айгерім','Что хотите получить?':'Не алғыңыз келеді?',
+    'Книга, плед, настолка…':'Кітап, плед, үстел ойыны…','Можно вставить ссылку на Kaspi, Ozon или WB. Пожелание можно поменять позже.':'Kaspi, Ozon немесе WB сілтемесін қоюға болады. Тілекті кейін өзгертуге болады.',
+    'Пожелание':'Тілек','Можно со ссылкой на Kaspi, Ozon или WB.':'Kaspi, Ozon немесе WB сілтемесімен де болады.','PIN из 4 цифр: нужен, чтобы зайти с другого телефона':'4 саннан тұратын PIN: басқа телефоннан кіру үшін керек',
+    'Ссылку для рабочего чата получите сразу после создания.':'Жұмыс чатына арналған сілтемені құрғаннан кейін бірден аласыз.',
+    'Заявка':'Өтініш','Жеребьёвка':'Жеребе','Подарок':'Сыйлық','Праздник':'Мереке','Приём заявок':'Өтініш қабылдау','Обмен':'Алмасу','Финал':'Финал','Этапы игры':'Ойын кезеңдері',
+    'Что дальше':'Әрі қарай не істеу керек',
+    'Отправьте ссылку для участников в рабочий чат. Для жеребьёвки нужно минимум 3 заявки.':'Қатысушыларға арналған сілтемені жұмыс чатына жіберіңіз. Жеребе үшін кемінде 3 өтініш қажет.',
+    'Заявок уже достаточно. Когда все подадут, нажмите «Распределить пары». Если кто-то не должен дарить друг другу, сначала добавьте исключение.':'Өтініштер жеткілікті. Барлығы бергенде «Жұптарды бөлу» батырмасын басыңыз. Біреулер бір-біріне сыйламауы керек болса, алдымен ерекшелік қосыңыз.',
+    'Пары распределены. Следите, кто открыл разрешение и купил подарок. После праздника раскройте, кто кому дарил.':'Жұптар бөлінді. Кім рұқсатын ашып, сыйлық алғанын қадағалаңыз. Мерекеден кейін кім кімге сыйлағанын ашыңыз.',
+    'Игра завершена. Когда она больше не нужна, удалите её внизу страницы.':'Ойын аяқталды. Қажет болмаса, оны беттің төменгі жағында жойыңыз.',
+    'Удаление игры':'Ойынды жою','Удалятся все заявки, пары и переписка, а ссылка перестанет работать. Вернуть игру будет нельзя.':'Барлық өтініштер, жұптар және хат алмасу жойылады, сілтеме жұмыс істемей қалады. Ойынды қайтару мүмкін болмайды.',
+    'Удалить игру':'Ойынды жою','Удалить игру навсегда?':'Ойынды біржола жоясыз ба?','Удалить навсегда':'Біржола жою',
+    'Участники больше не смогут открыть ссылку, а заявки, пары и переписка удалятся без возможности восстановления.':'Қатысушылар сілтемені аша алмайды, ал өтініштер, жұптар және хат алмасу қалпына келтіру мүмкіндігінсіз жойылады.',
+    'Чтобы подтвердить, введите название игры':'Растау үшін ойын атауын енгізіңіз','Игра удалена':'Ойын жойылды','Возможно, её удалили.':'Мүмкін, ол жойылған.','На главную':'Басты бетке',
+    'Держите палец на кнопке, пока не заполнится полоса':'Жолақ толғанша саусақты батырмада ұстаңыз','Спросить получателя':'Алушыдан сұрау','Удалить заявку?':'Өтінішті жоясыз ба?',
     'Внутренняя игра команды, не государственная услуга.':'Команданың ішкі ойыны, мемлекеттік қызмет емес.','Тайный Санта · E-license':'Жасырын Санта · E-license',
     // ошибки сервера
     'PIN должен состоять из 4 цифр':'PIN 4 саннан тұруы керек','Нет доступа организатора':'Ұйымдастырушы қолжетімділігі жоқ','Нужно войти':'Кіру қажет',
@@ -862,13 +895,19 @@
         el('a',{class:'btn btn-sm btn-line',href:'https://wa.me/?text='+encodeURIComponent(text+'\n'+url),target:'_blank',rel:'noopener'},'WhatsApp'),
         copyBtn('Ссылка', ()=>text+'\n'+url, 'btn-sm btn-line')));
   }
+  // поле: подпись над полем, пример (placeholder) внутри, подсказка под полем
   function fld(id, label, input, opts={}){
-    input.id = id; if (!input.getAttribute('placeholder')) input.setAttribute('placeholder',' ');
-    const w = el('div',{class:'fld'+(opts.select?' sel':'')+(opts.always?' always':'')}, input, el('label',{for:id}, label));
-    if (opts.max){
-      const c = el('span',{class:'count'}, (input.value||'').length+'/'+opts.max);
-      input.addEventListener('input', ()=>{ c.textContent = input.value.length+'/'+opts.max; });
-      w.append(c);
+    input.id = id;
+    if (opts.ph && input.tagName !== 'SELECT') input.setAttribute('placeholder', opts.ph);
+    const box = el('div',{class:'box'}, input);
+    const c = opts.max ? el('span',{class:'count'}, (input.value||'').length+'/'+opts.max) : null;
+    const w = el('div',{class:'fld'+(opts.select?' sel':'')}, el('label',{for:id}, label), box,
+      (opts.hint || c) ? el('div',{class:'meta'}, opts.hint ? el('p',{class:'hint'}, opts.hint) : null, c) : null);
+    if (c) input.addEventListener('input', ()=>{ c.textContent = input.value.length+'/'+opts.max; });
+    // многострочное поле растёт вместе с текстом
+    if (input.tagName === 'TEXTAREA'){
+      const fit = () => { input.style.height = 'auto'; input.style.height = Math.min(240, Math.max(104, input.scrollHeight + 3)) + 'px'; };
+      input.addEventListener('input', fit); requestAnimationFrame(fit);
     }
     return w;
   }
@@ -1115,9 +1154,17 @@
       if (done || holding) return; e.preventDefault();
       if (canStart && !canStart()) return;
       if (e.pointerId !== undefined) { try { btn.setPointerCapture(e.pointerId); } catch {} }
-      holding = true; btn.classList.add('pressing'); cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(step);
+      holding = true; pressedAt = Date.now(); btn.classList.add('pressing'); cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(step);
     };
-    const stop = () => { if (done) return; holding = false; btn.classList.remove('pressing'); };
+    let pressedAt = 0;
+    const stop = () => {
+      if (done) return;
+      if (holding && Date.now() - pressedAt < 350 && p < .4){                  // короткий тап — подсказываем, что нужно держать
+        toast('Держите палец на кнопке, пока не заполнится полоса');
+        btn.animate([{transform:'translateX(0)'},{transform:'translateX(-6px)'},{transform:'translateX(5px)'},{transform:'translateX(-3px)'},{transform:'none'}],{duration:400});
+      }
+      holding = false; btn.classList.remove('pressing');
+    };
     async function finish(){
       done = true; holding = false; cancelAnimationFrame(raf); btn.classList.remove('pressing');
       // финальный удар
@@ -1134,7 +1181,7 @@
     return btn;
   }
 
-  function hero({ title, sub, facts }){
+  function hero({ title, sub, facts, steps }){
     const h = $('hero'); const same = title === heroTitle; heroTitle = title;
     const oldT = same ? h.querySelector('.tw') : null;
     // гирлянду и неизменившуюся надпись не пересоздаём, чтобы физика и анимации не сбрасывались
@@ -1144,6 +1191,7 @@
     if (!oldT) GL.el.after(makeTitle(title));
     if (sub) h.append(el('p',{class:'sub'}, sub));
     if (facts && facts.length) h.append(el('div',{class:'facts'}, facts.map(f=> typeof f === 'object' ? el('span',{class:'fact cd'},f.text) : el('span',{class:'fact'},f))));
+    if (steps) h.append(el('ol',{class:'stepper','aria-label':'Этапы игры'}, steps.items.map((t,i)=>el('li',{class: i < steps.cur ? 'done' : i === steps.cur ? 'cur' : ''}, el('i',{}, i < steps.cur ? '✓' : String(i+1)), t))));
   }
   /* ---------- дата и обратный отсчёт ---------- */
   const isISO = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v||'');
@@ -1237,6 +1285,7 @@
 
   /* ================= главная ================= */
   function homePage(){
+    try { const f = sessionStorage.getItem('santa:flash'); if (f){ sessionStorage.removeItem('santa:flash'); setTimeout(()=>toast(f), 400); } } catch {}
     hero({ title:tr('Новогодняя услуга для своих'), sub:'Подаёте заявку, получаете разрешение на подарок. Кто дарит вам, узнаете на празднике.' });
     const t = el('input',{maxlength:'60'}), b = el('input',{maxlength:'30'}), d = el('input',{type:'date'});
     const err = el('div',{class:'err'});
@@ -1253,9 +1302,9 @@
     render(
       el('section',{class:'card'},
         el('h2',{},'Новая игра'),
-        el('p',{class:'lead'},'Например, «Новый год E-license». Ссылку для рабочего чата получите сразу после создания.'),
-        fld('f-title','Название',t),
-        el('div',{class:'pair'}, fld('f-budget','Бюджет',b), fld('f-date','Дата обмена',d,{always:true})),
+        el('p',{class:'lead'},'Ссылку для рабочего чата получите сразу после создания.'),
+        fld('f-title','Название игры',t,{ph:'Новый год E-license'}),
+        el('div',{class:'pair'}, fld('f-budget','Бюджет',b,{ph:'10 000 ₸'}), fld('f-date','Дата обмена',d)),
         btn, err),
       mine.length ? el('section',{class:'bare'}, el('h2',{},'Мои игры'),
         el('ul',{class:'list'}, mine.map((g,i) => el('li',{style:{animationDelay:(i*50)+'ms'}},
@@ -1273,6 +1322,7 @@
     async function load(){
       try{ S.game = await api('GET','/api/games/'+id); }
       catch(e){
+        if (e.status === 404) ls.set('santa:games', JSON.stringify(JSON.parse(ls.get('santa:games')||'[]').filter(x => x.id !== id)));
         hero({ title: tr(e.status===404 ? 'Игра не найдена' : 'Не получилось загрузить'), sub: e.status===404 ? 'Проверьте ссылку или создайте новую игру.' : e.message });
         return render(e.status===404 ? el('a',{class:'btn btn-main',href:'/'},'Создать игру') : el('button',{class:'btn btn-main',onclick:load},'Повторить'));
       }
@@ -1290,7 +1340,9 @@
     }
     function draw(){
       document.title = S.game.title + ' · Тайный Санта';
-      hero({ title:S.game.title, facts:factsOf(S.game) });
+      const g = S.game, past = daysLeft(g.date) !== null && daysLeft(g.date) < 0;
+      const cur = !S.me ? 0 : g.status === 'open' ? 1 : (g.revealed || past) ? 3 : 2;
+      hero({ title:g.title, facts:factsOf(g), steps:{ items:['Заявка','Жеребьёвка','Подарок','Праздник'], cur } });
       S.dirty = false;
       render(S.me ? (S.me.mustChangePin ? newPinView() : playerView()) : authView());
     }
@@ -1317,7 +1369,7 @@
       const g = S.game, err = el('div',{class:'err'});
       if (g.status === 'open' && S.mode === 'join'){
         const name = el('input',{maxlength:'40',autocomplete:'given-name'});
-        const pin = pinField('j-pin','Придумайте PIN из 4 цифр. Он нужен для входа с другого телефона, а если забудете, организатор его сбросит');
+        const pin = pinField('j-pin','PIN из 4 цифр: нужен, чтобы зайти с другого телефона');
         const wish = el('textarea',{maxlength:'500'});
         const btn = makeHold({
           label:'Зажмите, чтобы подать заявку',
@@ -1339,9 +1391,9 @@
           el('section',{class:'card'},
             el('h2',{},'Заявка на участие'),
             el('p',{class:'lead'},'Три поля, и вы в игре.'),
-            fld('j-name','Ваше имя',name),
+            fld('j-name','Ваше имя',name,{ph:'Например, Айгерим'}),
             pin.node,
-            fld('j-wish','Что хотите получить? Можно ссылку на Kaspi',wish,{max:500}),
+            fld('j-wish','Что хотите получить?',wish,{max:500,ph:'Книга, плед, настолка…',hint:'Можно вставить ссылку на Kaspi, Ozon или WB. Пожелание можно поменять позже.'}),
             btn, err,
             g.players.length ? el('div',{class:'links'}, el('button',{class:'link',onclick:()=>{S.mode='login';draw();}},'Я уже подавал(а) заявку')) : null),
           g.players.length ? participants(g) : null
@@ -1398,7 +1450,7 @@
         if (changed){ btn.classList.remove('done'); btn.textContent='Сохранить пожелание'; }
       });
       wrap.append(el('div',{}, btn));
-      return [fld('w-me','Пожелание, можно со ссылкой',ta,{max:500}), wrap];
+      return [fld('w-me','Пожелание',ta,{max:500,ph:'Книга, плед, настолка…',hint:'Можно со ссылкой на Kaspi, Ozon или WB.'}), wrap];
     }
     function accountLinks(){
       return el('div',{class:'links'},
@@ -1654,7 +1706,7 @@
         el('section',{class:'card',style:{marginTop:'18px'}},
           el('h2',{},'Я организатор, но потерял ссылку'),
           el('p',{class:'lead'},'Введите резервный код, который вы сохранили при создании игры.'),
-          fld('rc-code','Резервный код, например abcd-efgh-jkmn',code), btn, err));
+          fld('rc-code','Резервный код',code,{ph:'abcd-efgh-jkmn'}), btn, err));
     }
     if (!key) return noAccess();
 
@@ -1662,6 +1714,7 @@
       try{ A = await api('GET','/api/games/'+id+'/admin',null,H()); }
       catch(e){
         if (e.status===403){ ls.del('santa:admin:'+id); key = null; return noAccess(); }
+        if (e.status===404){ ls.set('santa:games', JSON.stringify(JSON.parse(ls.get('santa:games')||'[]').filter(x => x.id !== id))); hero({ title:tr('Игра не найдена'), sub:'Возможно, её удалили.' }); return render(el('a',{class:'btn btn-main',href:'/'},'На главную')); }
         hero({ title:tr('Не получилось загрузить'), sub:e.message });
         return render(el('button',{class:'btn btn-main',onclick:load},'Повторить'));
       }
@@ -1684,7 +1737,7 @@
       const t = el('input',{maxlength:'60',value:A.title}), b = el('input',{maxlength:'30',value:A.budget||''}), d = el('input',{type:'date',value:isISO(A.date)?A.date:''});
       const close = () => { sh.classList.add('out'); bg.style.transition='opacity .25s'; bg.style.opacity='0'; setTimeout(()=>bg.remove(),250); };
       const sh = el('div',{class:'sheet',role:'dialog','aria-modal':'true'}, el('div',{class:'grab'}), el('h3',{},'Настройки игры'),
-        fld('e-title','Название',t), el('div',{class:'pair'}, fld('e-budget','Бюджет',b), fld('e-date','Дата обмена',d,{always:true})),
+        fld('e-title','Название',t), el('div',{class:'pair'}, fld('e-budget','Бюджет',b,{ph:'10 000 ₸'}), fld('e-date','Дата обмена',d)),
         el('button',{class:'btn btn-main',onclick:async()=>{ try{ const body = { title:t.value, budget:b.value }; if (d.value || isISO(A.date)) body.date = d.value; await call('','PUT',body); close(); toast('Сохранено'); }catch(e){ toast(e.message); } }},'Сохранить'),
         el('button',{class:'btn btn-line',onclick:close},'Отмена'));
       const bg = el('div',{class:'sheet-bg',onclick:(e)=>{ if (e.target===bg) close(); }}, sh);
@@ -1716,7 +1769,13 @@
 
     function draw(){
       document.title = 'Кабинет организатора · ' + A.title;
-      hero({ title:A.title, sub:'Кабинет организатора', facts:factsOf(A) });
+      const stage = A.status === 'open' ? (A.players.length >= 3 ? 1 : 0) : A.revealed ? 3 : 2;
+      hero({ title:A.title, sub:'Кабинет организатора', facts:factsOf(A), steps:{ items:['Приём заявок','Жеребьёвка','Обмен','Финал'], cur:stage } });
+      const NEXT = [
+        ['📣','Отправьте ссылку для участников в рабочий чат. Для жеребьёвки нужно минимум 3 заявки.'],
+        ['🎲','Заявок уже достаточно. Когда все подадут, нажмите «Распределить пары». Если кто-то не должен дарить друг другу, сначала добавьте исключение.'],
+        ['🎁','Пары распределены. Следите, кто открыл разрешение и купил подарок. После праздника раскройте, кто кому дарил.'],
+        ['🎉','Игра завершена. Когда она больше не нужна, удалите её внизу страницы.']][stage];
       const total = A.players.length, wishes = A.players.filter(p=>p.hasWish).length, seen = A.players.filter(p=>p.seen).length, ready = A.players.filter(p=>p.ready).length;
       const drawn = A.status === 'drawn';
       const adminLink = playerUrl + '/admin#admin=' + key;
@@ -1725,6 +1784,7 @@
       const rcode = ls.get('santa:recovery:'+id);
 
       render(
+        el('div',{class:'next'}, el('span',{class:'ic'}, NEXT[0]), el('div',{}, el('b',{},'Что дальше'), el('p',{}, NEXT[1]))),
         drawn && A.revealed && A.chains ? finaleCard(A.chains, el('button',{class:'btn btn-line',onclick:()=>sheet('Скрыть цепочку?','Участники снова не будут видеть, кто кому дарил.','Скрыть',act('/reveal','POST',{revealed:false}))},'Скрыть цепочку')) : null,
 
         el('section',{class:'card'},
@@ -1785,12 +1845,41 @@
           ] : [
             el('p',{class:'lead',style:{marginBottom:'6px'}}, A.hasRecovery ? 'Код был создан на другом устройстве или скрыт. Можно создать новый, старый тогда перестанет работать.' : 'Создайте код, чтобы вернуть доступ, если потеряете ссылку организатора.'),
             el('button',{class:'btn btn-sm btn-line',onclick:newCode}, 'Создать резервный код')
-          ]));
+          ]),
+
+        el('section',{class:'danger'},
+          el('h2',{},'Удаление игры'),
+          el('p',{class:'lead'},'Удалятся все заявки, пары и переписка, а ссылка перестанет работать. Вернуть игру будет нельзя.'),
+          el('button',{class:'btn btn-danger',onclick:deleteSheet},'Удалить игру')));
 
       const vals = drawn ? [total, seen, ready] : [total, wishes, A.exclusions.length];
       nums.forEach((n,i)=> first ? countUp(n, vals[i]) : (n.textContent = vals[i]));
       requestAnimationFrame(()=>requestAnimationFrame(()=>{ bar.style.width = (total ? Math.round(ready/total*100) : 0)+'%'; }));
       first = false;
+    }
+    function deleteSheet(){
+      const inp = el('input',{autocomplete:'off',spellcheck:'false'});
+      const err = el('div',{class:'err'});
+      const close = () => { sh.classList.add('out'); bg.style.transition='opacity .25s'; bg.style.opacity='0'; setTimeout(()=>bg.remove(),250); };
+      const go = el('button',{class:'btn btn-danger',disabled:true,onclick:async()=>{
+        busy(go,true);
+        try{
+          await api('DELETE','/api/games/'+id+'/admin',null,H());
+          ['admin','recovery','token'].forEach(k => ls.del('santa:'+k+':'+id));
+          ls.set('santa:games', JSON.stringify(JSON.parse(ls.get('santa:games')||'[]').filter(x => x.id !== id)));
+          try { sessionStorage.setItem('santa:flash','Игра удалена'); } catch {}
+          haptic([30,40,60]); location.href = '/';
+        }catch(e){ err.textContent = e.message; busy(go,false); }
+      }},'Удалить навсегда');
+      const norm = (v) => v.trim().toLowerCase().replace(/\s+/g,' ');
+      inp.addEventListener('input', () => { go.disabled = norm(inp.value) !== norm(A.title); });
+      const sh = el('div',{class:'sheet',role:'dialog','aria-modal':'true'}, el('div',{class:'grab'}),
+        el('h3',{},'Удалить игру навсегда?'),
+        el('p',{},'Участники больше не смогут открыть ссылку, а заявки, пары и переписка удалятся без возможности восстановления.'),
+        fld('del-title','Чтобы подтвердить, введите название игры',inp,{ph:A.title}),
+        go, el('button',{class:'btn btn-line',onclick:close},'Отмена'), err);
+      const bg = el('div',{class:'sheet-bg',onclick:(e)=>{ if (e.target===bg) close(); }}, sh);
+      document.body.append(bg); setTimeout(()=>inp.focus(), 350);
     }
     async function newCode(){
       try{ const r = await api('POST','/api/games/'+id+'/admin/recovery',null,H()); ls.set('santa:recovery:'+id, r.recoveryCode); render.quiet=true; draw(); render.quiet=false; haptic(15); toast('Резервный код создан. Сохраните его'); }
