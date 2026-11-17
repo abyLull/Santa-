@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#d9dcf3">
+<meta name="theme-color" content="#dbe4f8">
 <title>Тайный Санта</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎁</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -11,13 +11,14 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Unbounded:wght@500;700;800&display=swap" rel="stylesheet">
 <style>
   :root{
-    --sky:#d9dcf3;        /* сумеречная лаванда */
-    --blush:#f7e6ec;      /* румянец у горизонта */
-    --ink:#2b2d4a;        /* глубокий индиго */
-    --ink-soft:#6c6f8e;
-    --berry:#d9577d;      /* клюква */
-    --berry-deep:#bb4468;
-    --berry-tint:#fbe3ea;
+    --sky:#dbe4f8;        /* морозное небо */
+    --blush:#f2ebf6;      /* лавандовый горизонт */
+    --ink:#24304f;        /* глубокий синий */
+    --ink-soft:#66708f;
+    --berry:#3a6ee0;      /* синий E-license */
+    --berry-deep:#2b55b8;
+    --berry-tint:#e3ebfc;
+    --stamp:#4a4fc6;      /* чернила печати */
     --pine:#4f8a78;       /* хвоя */
     --pine-tint:#e1f0ea;
     --gold:#f4cf86;       /* лента */
@@ -34,7 +35,7 @@
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
   html{background:var(--blush)}
   body{margin:0;font-family:var(--body);color:var(--ink);font-size:16px;line-height:1.5;min-height:100vh;
-    background:linear-gradient(180deg,var(--sky) 0%,#e6e1f4 38%,var(--blush) 100%) fixed;}
+    background:linear-gradient(180deg,var(--sky) 0%,#e5e6f7 40%,var(--blush) 100%) fixed;}
   #snow{position:fixed;inset:0;pointer-events:none;z-index:0}
   .wrap{position:relative;z-index:1;max-width:520px;margin:0 auto;padding:max(22px,env(safe-area-inset-top)) 18px max(40px,env(safe-area-inset-bottom))}
 
@@ -43,6 +44,9 @@
   .hero a{color:inherit;text-decoration:none}
   .brand{display:inline-flex;align-items:center;gap:8px;font-family:var(--display);font-weight:500;font-size:13px;color:var(--ink-soft);letter-spacing:.2px}
   .brand svg{width:20px;height:20px}
+  .mark{font-family:var(--display);font-weight:700;color:var(--ink);letter-spacing:-.2px}
+  .mark b{color:var(--berry);font-weight:800}
+  .team{display:inline-block;margin-left:2px;padding:2px 8px;border-radius:999px;background:var(--berry-tint);color:var(--berry-deep);font-size:11.5px;font-weight:700}
   .hero h1{font-family:var(--display);font-weight:800;font-size:clamp(30px,8.5vw,40px);line-height:1.05;letter-spacing:-.5px;margin:14px 0 8px;word-break:break-word}
   .hero p{margin:0;color:var(--ink-soft);font-size:15px;max-width:34ch}
   .facts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
@@ -50,7 +54,7 @@
 
   /* ---------- поверхности ---------- */
   .sheet{background:var(--glass);-webkit-backdrop-filter:blur(18px) saturate(1.2);backdrop-filter:blur(18px) saturate(1.2);
-    border-radius:var(--r-lg);padding:22px 20px;margin-bottom:16px;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 18px 40px -18px rgba(78,72,140,.35)}
+    border-radius:var(--r-lg);padding:22px 20px;margin-bottom:16px;box-shadow:0 1px 0 rgba(255,255,255,.9) inset,0 18px 40px -18px rgba(52,72,140,.35)}
   .plain{padding:6px 4px 18px}
   h2{font-family:var(--display);font-weight:700;font-size:19px;line-height:1.25;margin:0 0 6px;letter-spacing:-.2px}
   .lead{color:var(--ink-soft);font-size:14.5px;margin:0 0 16px;line-height:1.5}
@@ -62,7 +66,7 @@
     background:var(--field);color:var(--ink);transition:border-color .2s,box-shadow .2s,background .2s;box-shadow:0 1px 2px rgba(43,45,74,.06)}
   textarea{resize:vertical;min-height:92px;line-height:1.45}
   input::placeholder,textarea::placeholder{color:#a3a5bd}
-  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--berry);background:#fff;box-shadow:0 0 0 5px rgba(217,87,125,.14)}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--berry);background:#fff;box-shadow:0 0 0 5px rgba(58,110,224,.15)}
   .pin{font-family:var(--display);letter-spacing:18px;text-align:center;font-size:24px;font-weight:700;padding-left:30px}
   .row{display:flex;gap:10px}.row>*{flex:1;min-width:0}
 
@@ -70,20 +74,20 @@
   .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;border-radius:var(--r-md);padding:15px 18px;
     font:inherit;font-weight:700;font-size:16px;cursor:pointer;text-decoration:none;transition:transform .15s var(--ease),box-shadow .2s,background .2s,opacity .2s;user-select:none}
   .btn:active{transform:scale(.97)}
-  .btn:focus-visible,.link:focus-visible,.chipbtn:focus-visible{outline:3px solid rgba(217,87,125,.45);outline-offset:3px}
+  .btn:focus-visible,.link:focus-visible,.chipbtn:focus-visible{outline:3px solid rgba(58,110,224,.45);outline-offset:3px}
   .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
-  .btn-primary{color:#fff;background:linear-gradient(135deg,#e46a8e,var(--berry-deep));box-shadow:0 10px 22px -10px rgba(187,68,104,.75)}
-  .btn-primary:hover{box-shadow:0 14px 26px -10px rgba(187,68,104,.85)}
+  .btn-primary{color:#fff;background:linear-gradient(135deg,#4f84f0,var(--berry-deep));box-shadow:0 10px 22px -10px rgba(43,85,184,.75)}
+  .btn-primary:hover{box-shadow:0 14px 26px -10px rgba(43,85,184,.85)}
   .btn-pine{color:#fff;background:linear-gradient(135deg,#5c9a87,#3f7766);box-shadow:0 10px 22px -12px rgba(63,119,102,.8)}
   .btn-soft{background:rgba(255,255,255,.9);color:var(--ink);box-shadow:0 1px 2px rgba(43,45,74,.08)}
-  .btn-danger{background:transparent;color:var(--berry-deep);border:1.5px solid rgba(217,87,125,.35)}
+  .btn-danger{background:transparent;color:#b6455f;border:1.5px solid rgba(182,69,95,.35)}
   .btn-sm{padding:10px 12px;font-size:14px;border-radius:14px}
   .block{width:100%;margin-top:16px}
   .link{background:none;border:0;padding:6px 2px;font:inherit;font-size:14px;font-weight:600;color:var(--ink-soft);cursor:pointer;text-decoration:underline;text-underline-offset:3px;text-decoration-color:rgba(108,111,142,.4)}
   .links{display:flex;justify-content:center;flex-wrap:wrap;gap:4px 18px;margin-top:14px}
   .share{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:12px}
   .tg{background:#e3f2fb;color:#1f84bf}.wa{background:#e2f6ea;color:#1c8a4a}
-  .err{color:var(--berry-deep);font-size:14px;font-weight:600;margin-top:10px;min-height:1.2em}
+  .err{color:#b6455f;font-size:14px;font-weight:600;margin-top:10px;min-height:1.2em}
 
   /* ---------- участники ---------- */
   .chips{display:flex;flex-wrap:wrap;gap:8px}
@@ -107,25 +111,44 @@
 
   /* ---------- подарок ---------- */
   .stage{position:relative;text-align:center;padding:6px 0 4px}
-  .gift-btn{background:none;border:0;padding:0;cursor:pointer;display:block;margin:4px auto 0;width:200px;height:200px;position:relative}
-  .gift-btn svg{width:100%;height:100%;overflow:visible}
-  .gift-btn .lid{transform-origin:100px 92px;transition:transform .7s var(--spring),opacity .5s}
-  .gift-btn.idle svg{animation:bob 3.2s ease-in-out infinite}
-  .gift-btn.shake svg{animation:shake .55s ease-in-out}
-  .gift-btn.open .lid{transform:translateY(-90px) rotate(-22deg);opacity:0}
-  .gift-btn.open .body{animation:sink .6s .25s var(--ease) forwards}
   .tap{font-weight:700;color:var(--ink-soft);margin:6px 0 2px;animation:breathe 2.4s ease-in-out infinite}
   .reveal{animation:rise .8s var(--spring) both}
   .to{font-size:15px;color:var(--ink-soft);font-weight:600;margin:0}
   .name{font-family:var(--display);font-weight:800;font-size:clamp(34px,11vw,48px);line-height:1.05;letter-spacing:-.8px;margin:8px 0 18px;word-break:break-word;
-    background:linear-gradient(135deg,#e46a8e,#9b5fc0);-webkit-background-clip:text;background-clip:text;color:transparent}
+    background:linear-gradient(135deg,#3a6ee0,#7a55c9);-webkit-background-clip:text;background-clip:text;color:transparent}
   .wish{position:relative;text-align:left;background:var(--gold-tint);border-radius:var(--r-md);padding:16px 16px 16px 18px;font-size:15.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
   .wish::before{content:'';position:absolute;left:0;top:14px;bottom:14px;width:4px;border-radius:0 4px 4px 0;background:var(--gold)}
   .wish .who{display:block;font-weight:800;font-size:13.5px;color:#8a6418;margin-bottom:4px}
   .wish.empty{background:rgba(255,255,255,.6);color:var(--ink-soft)}
   .wish.empty::before{background:rgba(43,45,74,.12)}
   .secret{font-size:14px;color:var(--ink-soft);margin:14px 0 0;font-weight:600}
-  .confetti{position:absolute;left:50%;top:44%;width:9px;height:14px;border-radius:3px;pointer-events:none;opacity:0;
+  .doc{position:relative;text-align:left;background:#fffdf8;border-radius:20px;padding:20px 18px 22px;margin:2px -4px 0;overflow:hidden;
+    box-shadow:0 1px 0 #fff inset,0 14px 34px -16px rgba(36,48,79,.45);animation:unfold .7s var(--spring) both;transform-origin:50% 0}
+  .doc::before{content:'';position:absolute;inset:8px;border-radius:14px;pointer-events:none;
+    border:1.5px solid rgba(58,110,224,.22);box-shadow:0 0 0 4px #fffdf8,0 0 0 5px rgba(58,110,224,.12)}
+  .doc-head{display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12.5px;color:var(--ink-soft);font-weight:600;position:relative}
+  .doc-head .mark{font-size:14px}
+  .doc h3{font-family:var(--display);font-weight:700;font-size:18px;line-height:1.25;margin:14px 0 2px;position:relative}
+  .doc .no{font-size:13px;color:var(--ink-soft);font-weight:600;font-variant-numeric:tabular-nums;position:relative}
+  .field{position:relative;margin-top:14px}
+  .field>small{display:block;font-size:12.5px;color:var(--ink-soft);font-weight:600}
+  .val{font-weight:700;font-size:16px;white-space:nowrap}
+  .doc .name{margin:0;text-align:left;font-size:clamp(30px,9vw,40px)}
+  .doc .wish{margin-top:6px;font-size:15.5px}
+  .terms{display:flex;gap:28px;position:relative;margin-top:14px}
+  .terms>div>small{display:block;font-size:12.5px;color:var(--ink-soft);font-weight:600}
+  .sign{position:relative;height:104px;margin-top:12px;border-top:1px dashed rgba(36,48,79,.18);padding-top:10px}
+  .sign small{display:block;font-size:12.5px;color:var(--ink-soft);font-weight:600}
+  .sign i{font-family:'Brush Script MT','Segoe Script',cursive;font-size:24px;color:var(--stamp);opacity:.85;display:inline-block;transform:rotate(-4deg);margin-top:4px}
+  .stamp{position:absolute;right:14px;bottom:14px;width:118px;height:118px;color:var(--stamp);opacity:0;pointer-events:none;mix-blend-mode:multiply}
+  .stamp.in{animation:stamp .55s .75s cubic-bezier(.2,1.4,.4,1) forwards}
+  .stamp.static{opacity:.85;transform:rotate(-14deg)}
+  .doc.thud{animation:unfold .7s var(--spring) both,thud .35s 1.05s ease-out}
+  .status-card{text-align:center;padding:8px 0 4px}
+  .status-card .big{font-family:var(--display);font-weight:800;font-size:24px;margin:10px 0 4px}
+  .tick{width:64px;height:64px;border-radius:50%;display:grid;place-items:center;margin:4px auto 0;background:var(--pine-tint);color:var(--pine);animation:pop .6s var(--spring) both}
+  .tick svg{width:30px;height:30px}
+  .confetti{position:absolute;left:70%;top:78%;z-index:3;width:9px;height:14px;border-radius:3px;pointer-events:none;opacity:0;
     animation:burst 1.3s var(--ease) forwards}
 
   /* ---------- ожидание ---------- */
@@ -164,6 +187,9 @@
   @keyframes sink{to{transform:translateY(30px) scale(.85);opacity:0}}
   @keyframes breathe{0%,100%{opacity:.55}50%{opacity:1}}
   @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+  @keyframes unfold{from{opacity:0;transform:perspective(700px) rotateX(-70deg) translateY(-10px)}to{opacity:1;transform:none}}
+  @keyframes stamp{0%{opacity:0;transform:scale(2.4) rotate(-40deg)}70%{opacity:.9;transform:scale(.92) rotate(-12deg)}100%{opacity:.85;transform:scale(1) rotate(-14deg)}}
+  @keyframes thud{0%,100%{transform:none}30%{transform:translateY(3px) scale(.995)}}
   @keyframes burst{0%{opacity:1;transform:translate(-50%,-50%) rotate(0)}
     100%{opacity:0;transform:translate(calc(-50% + var(--dx)),calc(-50% + var(--dy))) rotate(var(--rot))}}
   @media (prefers-reduced-motion:reduce){
@@ -177,9 +203,9 @@
 <div class="wrap">
   <header class="hero" id="hero"></header>
   <main id="app">
-    <div class="loader"><svg viewBox="0 0 64 64"><rect x="10" y="26" width="44" height="30" rx="6" fill="#d9577d"/><rect x="6" y="18" width="52" height="12" rx="5" fill="#e46a8e"/><rect x="28" y="18" width="8" height="38" fill="#f4cf86"/></svg>Загружаем…</div>
+    <div class="loader"><svg viewBox="0 0 64 64"><rect x="10" y="26" width="44" height="30" rx="6" fill="#3a6ee0"/><rect x="6" y="18" width="52" height="12" rx="5" fill="#5b8bf0"/><rect x="28" y="18" width="8" height="38" fill="#f4cf86"/></svg>Загружаем…</div>
   </main>
-  <div class="foot">Пары знает только сервер. Даже организатор их не видит.</div>
+  <div class="foot">Пары знает только сервер. Даже организатор их не видит.<br>Внутренняя игра команды, не государственная услуга 🙂</div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
@@ -251,12 +277,12 @@
   function avatar(name){ let h=0; for (const c of name) h=(h*31+c.charCodeAt(0))>>>0; const [bg,fg]=AV[h%AV.length];
     return el('span',{class:'avatar',style:{background:bg,color:fg}}, (name.trim()[0]||'?').toUpperCase()); }
 
-  const giftIcon = () => '<svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="11" rx="2.5" fill="#d9577d"/><rect x="2" y="7" width="20" height="5" rx="2" fill="#e46a8e"/><rect x="10.5" y="7" width="3" height="14" fill="#f4cf86"/><path d="M12 7c-2-4-6-4-6-1.5S9.5 7 12 7zm0 0c2-4 6-4 6-1.5S14.5 7 12 7z" fill="#f4cf86"/></svg>';
+  const giftIcon = () => '<svg viewBox="0 0 24 24"><rect x="3" y="10" width="18" height="11" rx="2.5" fill="#3a6ee0"/><rect x="2" y="7" width="20" height="5" rx="2" fill="#5b8bf0"/><rect x="10.5" y="7" width="3" height="14" fill="#f4cf86"/><path d="M12 7c-2-4-6-4-6-1.5S9.5 7 12 7zm0 0c2-4 6-4 6-1.5S14.5 7 12 7z" fill="#f4cf86"/></svg>';
 
   function hero({ title, sub, facts, homeLink=true }){
     const h = $('hero'); h.innerHTML='';
     [
-      el('a',{class:'brand',href:'/',html: giftIcon()+'<span>Тайный Санта</span>'}),
+      el('a',{class:'brand',href:'/',html: giftIcon()+'<span>Тайный Санта</span> <span class="team">команда <span class="mark">E-<b>license</b></span></span>'}),
       el('h1',{}, title),
       sub ? el('p',{}, sub) : null,
       facts && facts.length ? el('div',{class:'facts'}, facts.map(f=>el('span',{class:'fact'},f))) : null
@@ -305,18 +331,18 @@
 
   /* ================= главная ================= */
   function homePage(){
-    hero({ title:'Подарки по секрету', sub:'Каждый узнаёт, кому дарит, а кто дарит ему — остаётся сюрпризом до праздника.' });
+    hero({ title:'Новогодняя услуга для своих', sub:'Без ЭЦП и очередей: подаёте заявку, получаете разрешение на вручение подарка, а кто дарит вам — секрет до праздника.' });
     const mine = JSON.parse(ls.get('santa:games') || '[]');
-    const t = el('input',{placeholder:'Новый год с друзьями',maxlength:'60',id:'f-title'});
+    const t = el('input',{placeholder:'Новый год E-license',maxlength:'60',id:'f-title'});
     const b = el('input',{placeholder:'до 10 000 ₸',maxlength:'30',id:'f-budget'});
     const d = el('input',{placeholder:'27 декабря',maxlength:'30',id:'f-date'});
     const err = el('div',{class:'err'});
     const btn = el('button',{class:'btn btn-primary block',onclick:async()=>{
       err.textContent=''; busy(btn,true);
       try{
-        const r = await api('POST','/api/games',{ title:t.value, budget:b.value, date:d.value });
+        const r = await api('POST','/api/games',{ title:t.value || 'Новый год E-license', budget:b.value, date:d.value });
         ls.set('santa:admin:'+r.id, r.adminKey);
-        rememberGame(r.id, t.value || 'Тайный Санта', true);
+        rememberGame(r.id, t.value || 'Новый год E-license', true);
         location.href = '/g/'+r.id+'/admin';
       }catch(e){ err.textContent=e.message; busy(btn,false); }
     }},'Создать игру');
@@ -324,7 +350,7 @@
     render(
       el('section',{class:'sheet'},
         el('h2',{},'Новая игра'),
-        el('p',{class:'lead'},'Вы получите ссылку для общего чата. Каждый откроет её на своём телефоне и запишется с пожеланием.'),
+        el('p',{class:'lead'},'Вы получите ссылку для рабочего чата. Каждый откроет её на телефоне и подаст заявку с пожеланием.'),
         el('label',{for:'f-title'},'Название'), t,
         el('div',{class:'row'}, el('div',{},el('label',{for:'f-budget'},'Бюджет'),b), el('div',{},el('label',{for:'f-date'},'Дата обмена'),d)),
         btn, err),
@@ -380,20 +406,20 @@
           try{
             const r = await api('POST','/api/games/'+id+'/join',{ name:name.value, pin:pin.value, wish:wish.value });
             S.token = r.token; ls.set('santa:token:'+id, r.token);
-            toast('Вы в игре 🎉'); await load();
+            toast('Заявка принята 🎉'); await load();
           }catch(e){ err.textContent=e.message; busy(btn,false); }
-        }},'Записаться');
+        }},'Подать заявку');
         return [
           el('section',{class:'sheet'},
-            el('h2',{},'Записаться в игру'),
-            el('p',{class:'lead'},'PIN понадобится, чтобы зайти с другого телефона. Никто другой вашу карточку не откроет.'),
+            el('h2',{},'Подать заявку на участие'),
+            el('p',{class:'lead'},'Вместо ЭЦП здесь PIN. Он понадобится, чтобы зайти с другого телефона, и без него вашу карточку никто не откроет.'),
             el('label',{for:'j-name'},'Ваше имя'), name,
             el('label',{for:'j-pin'},'PIN из 4 цифр'), pin,
             el('label',{for:'j-wish'},'Что бы вы хотели получить'), wish,
             btn, err,
-            g.players.length ? el('div',{class:'links'}, el('button',{class:'link',onclick:()=>{S.mode='login';draw();}},'Я уже записан(а)')) : null),
+            g.players.length ? el('div',{class:'links'}, el('button',{class:'link',onclick:()=>{S.mode='login';draw();}},'Я уже подавал(а) заявку')) : null),
           g.players.length ? el('section',{class:'plain'},
-            el('h2',{},'Уже в игре', el('span',{class:'count'}, String(g.players.length))),
+            el('h2',{},'Заявки подали', el('span',{class:'count'}, String(g.players.length))),
             el('div',{class:'chips',style:{marginTop:'12px'}}, g.players.map((p,i)=>el('span',{class:'chip',style:{animationDelay:(i*40)+'ms'}},p.name)))) : null
         ];
       }
@@ -410,8 +436,8 @@
         }catch(e){ err.textContent=e.message; pin.value=''; busy(btn,false); }
       }},'Войти');
       return el('section',{class:'sheet'},
-        el('h2',{}, g.status==='drawn' ? 'Жеребьёвка прошла' : 'С возвращением'),
-        el('p',{class:'lead'}, g.status==='drawn' ? 'Выберите своё имя и введите PIN, чтобы узнать, кому вы дарите.' : 'Выберите своё имя и введите PIN, который придумали при записи.'),
+        el('h2',{}, g.status==='drawn' ? 'Разрешения выданы' : 'С возвращением'),
+        el('p',{class:'lead'}, g.status==='drawn' ? 'Выберите своё имя и введите PIN, чтобы получить своё разрешение на вручение подарка.' : 'Выберите своё имя и введите PIN, который придумали при подаче заявки.'),
         el('label',{for:'l-who'},'Кто вы'), sel,
         el('label',{for:'l-pin'},'PIN'), pin,
         btn, err,
@@ -442,49 +468,57 @@
         })},'Покинуть игру') : null);
     }
 
-    function recipientBlock(r){
-      return el('div',{class:'reveal'},
-        el('p',{class:'to'}, S.me.name+', вы дарите подарок'),
-        el('div',{class:'name'}, r.name),
-        r.wish ? el('div',{class:'wish'}, el('span',{class:'who'},'Пожелание'), r.wish)
-               : el('div',{class:'wish empty'}, r.name+' ещё не написал(а) пожелание. Когда напишет, оно появится здесь.'),
-        el('p',{class:'secret'},'🤫 Это секрет до самого праздника'));
+    function docNumber(){
+      let h=7; for (const c of id+S.me.id) h=(h*131+c.charCodeAt(0))%100000;
+      return '№ ЕЛ-'+new Date().getFullYear()+'-'+String(h).padStart(5,'0');
+    }
+    const STAMP = `<svg viewBox="0 0 120 120" aria-hidden="true">
+      <defs><path id="ring" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+      <circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="3"/>
+      <circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="1.6"/>
+      <text font-family="Manrope,sans-serif" font-size="10.5" font-weight="800" letter-spacing="2.2" fill="currentColor">
+        <textPath href="#ring">ТАЙНЫЙ САНТА ✦ E-LICENSE ✦ ДЕД МОРОЗ ✦</textPath></text>
+      <text x="60" y="58" text-anchor="middle" font-family="Unbounded,Manrope,sans-serif" font-size="15" font-weight="800" fill="currentColor">ВЫДАНО</text>
+      <text x="60" y="74" text-anchor="middle" font-family="Manrope,sans-serif" font-size="9" font-weight="700" fill="currentColor">🎄 ${new Date().getFullYear()+1}</text>
+    </svg>`;
+    function licenseDoc(r, animate){
+      const g = S.game;
+      const doc = el('div',{class:'doc'+(animate?' thud':'')},
+        el('div',{class:'doc-head'}, el('span',{class:'mark',html:'E-<b>license</b>'}), el('span',{},'Разрешительный документ')),
+        el('h3',{},'Разрешение на вручение подарка'),
+        el('div',{class:'no'}, docNumber()),
+        el('div',{class:'field'}, el('small',{},'Выдано'), el('div',{class:'val'}, S.me.name)),
+        el('div',{class:'field'}, el('small',{},'Получатель подарка'), el('div',{class:'name'}, r.name)),
+        el('div',{class:'field'}, el('small',{},'Пожелание получателя'),
+          r.wish ? el('div',{class:'wish'}, r.wish)
+                 : el('div',{class:'wish empty'}, 'Пока не указано. Как только '+r.name+' напишет, оно появится здесь.')),
+        (g.budget || g.date) ? el('div',{class:'terms'},
+          g.budget ? el('div',{}, el('small',{},'Бюджет'), el('div',{class:'val'}, g.budget)) : null,
+          g.date ? el('div',{}, el('small',{},'Срок исполнения'), el('div',{class:'val'}, g.date)) : null) : null,
+        el('div',{class:'sign'}, el('small',{},'Подпись уполномоченного лица'), el('i',{},'Дед Мороз')),
+        el('span',{class:'stamp '+(animate?'in':'static'),html:STAMP}));
+      return [doc, el('p',{class:'secret center'},'🤫 Документ строго конфиденциальный. Никому не показывайте')];
     }
     function giftStage(r){
       const openedKey = 'santa:opened:'+id;
       const stage = el('div',{class:'stage'});
-      if (ls.get(openedKey) || reduceMotion){ stage.append(recipientBlock(r)); return stage; }
-      const btn = el('button',{class:'gift-btn idle','aria-label':'Открыть подарок',html:`
-        <svg viewBox="0 0 200 200">
-          <ellipse cx="100" cy="182" rx="62" ry="8" fill="rgba(43,45,74,.12)"/>
-          <g class="body">
-            <rect x="38" y="92" width="124" height="86" rx="14" fill="#d9577d"/>
-            <rect x="38" y="92" width="124" height="18" fill="#bb4468" opacity=".35"/>
-            <rect x="91" y="92" width="18" height="86" fill="#f4cf86"/>
-          </g>
-          <g class="lid">
-            <rect x="28" y="70" width="144" height="30" rx="10" fill="#e46a8e"/>
-            <rect x="91" y="70" width="18" height="30" fill="#f4cf86"/>
-            <path d="M100 70c-10-26-44-30-44-10 0 12 22 12 44 10z" fill="#f4cf86"/>
-            <path d="M100 70c10-26 44-30 44-10 0 12-22 12-44 10z" fill="#efc072"/>
-            <circle cx="100" cy="68" r="8" fill="#e8b45e"/>
-          </g>
-        </svg>`});
-      const hint = el('p',{class:'tap'},'Нажмите, чтобы открыть');
-      const intro = el('p',{class:'to'},'Жеребьёвка прошла. Ваш подарок ждёт');
-      btn.addEventListener('click',()=>{
-        if (btn.classList.contains('shake')) return;
-        btn.classList.remove('idle'); btn.classList.add('shake'); hint.remove();
-        setTimeout(()=>{
-          btn.classList.remove('shake'); btn.classList.add('open'); burst(stage);
-          setTimeout(()=>{ ls.set(openedKey,'1'); btn.remove(); intro.remove(); stage.append(recipientBlock(r)); }, 650);
-        }, 520);
-      });
-      stage.append(intro, btn, hint);
+      if (ls.get(openedKey) || reduceMotion){ stage.append(...licenseDoc(r,false)); return stage; }
+      const btn = el('button',{class:'btn btn-primary block',onclick:()=>{
+        ls.set(openedKey,'1');
+        stage.classList.remove('pending-doc'); stage.innerHTML='';
+        stage.append(...licenseDoc(r,true));
+        setTimeout(()=>burst(stage), 1000);
+      }},'Получить разрешение');
+      stage.classList.add('pending-doc');
+      stage.append(el('div',{class:'status-card'},
+        el('div',{class:'tick',html:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>'}),
+        el('div',{class:'big'},'Заявка одобрена'),
+        el('p',{class:'lead',style:{margin:'0'}},'Разрешение на вручение подарка готово. В нём имя коллеги, которому вы дарите.'),
+        btn));
       return stage;
     }
     function burst(host){
-      const colors=['#d9577d','#f4cf86','#9b5fc0','#4f8a78','#e46a8e','#fff'];
+      const colors=['#3a6ee0','#f4cf86','#7a55c9','#4f8a78','#8fb2f7','#fff'];
       for (let i=0;i<46;i++){
         const a=Math.random()*Math.PI*2, dist=90+Math.random()*130;
         const p=el('span',{class:'confetti',style:{background:colors[i%colors.length],animationDelay:(Math.random()*120)+'ms'}});
@@ -510,15 +544,15 @@
         el('section',{class:'sheet'},
           el('h2',{},'Привет, '+S.me.name+'!'),
           el('div',{class:'waiting'},
-            el('span',{html:'<svg viewBox="0 0 48 48"><rect x="8" y="20" width="32" height="22" rx="5" fill="#d9577d"/><rect x="5" y="14" width="38" height="9" rx="4" fill="#e46a8e"/><rect x="21" y="14" width="6" height="28" fill="#f4cf86"/><path d="M24 14c-4-9-14-9-14-3s7 3 14 3zm0 0c4-9 14-9 14-3s-7 3-14 3z" fill="#f4cf86"/></svg>'}),
-            el('p',{}, el('b',{},'Вы в игре.'),' Когда организатор проведёт жеребьёвку, здесь появится подарок с именем того, кому вы дарите.')),
+            el('span',{html:'<svg viewBox="0 0 48 48"><rect x="8" y="20" width="32" height="22" rx="5" fill="#3a6ee0"/><rect x="5" y="14" width="38" height="9" rx="4" fill="#5b8bf0"/><rect x="21" y="14" width="6" height="28" fill="#f4cf86"/><path d="M24 14c-4-9-14-9-14-3s7 3 14 3zm0 0c4-9 14-9 14-3s-7 3-14 3z" fill="#f4cf86"/></svg>'}),
+            el('p',{}, el('b',{},'Статус заявки: на рассмотрении у Деда Мороза.'),' После жеребьёвки здесь появится ваше разрешение на вручение подарка с именем коллеги.')),
           el('label',{for:'w-me'},'Ваше пожелание (его увидит ваш Санта)'),
           wishEditor()),
         el('section',{class:'plain'},
           el('h2',{},'Участники', el('span',{class:'count'}, String(g.players.length))),
           el('div',{class:'chips',style:{marginTop:'12px'}}, g.players.map((p,i)=>el('span',{class:'chip'+(p.id===S.me.id?' me':''),style:{animationDelay:(i*40)+'ms'}},p.name))),
-          el('label',{style:{marginTop:'20px'}},'Позовите остальных'),
-          shareButtons('🎅 Присоединяйся к Тайному Санте «'+g.title+'»', shareUrl),
+          el('label',{style:{marginTop:'20px'}},'Позовите коллег'),
+          shareButtons('🎅 Тайный Санта команды E-license «'+g.title+'». Подавай заявку:', shareUrl),
           accountLinks())
       ];
     }
@@ -527,7 +561,7 @@
     $('app').addEventListener('input', ()=>{ S.dirty = true; });
     const canRefresh = () => document.visibilityState==='visible' && !S.dirty && !modalOpen()
       && !(document.activeElement && /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName))
-      && !document.querySelector('.gift-btn');
+      && !document.querySelector('.pending-doc');
     const refresh = () => { if (canRefresh()) { render.quiet = true; load().finally(()=>{ render.quiet=false; }); } };
     setInterval(refresh, 20000);
     document.addEventListener('visibilitychange', refresh);
@@ -562,41 +596,41 @@
     }
     const act = (path, method='POST') => async () => {
       try{ A = await api(method,'/api/games/'+id+'/admin'+path,null,H); render.quiet=true; draw(); render.quiet=false;
-        if (path==='/draw') toast('Пары распределены 🎲'); }
+        if (path==='/draw') toast('Разрешения выданы 🎲'); }
       catch(e){ toast(e.message); }
     };
 
     function draw(){
-      document.title = 'Организатор · ' + A.title;
-      hero({ title:A.title, sub:'Панель организатора', facts:factsOf(A) });
+      document.title = 'Кабинет организатора: ' + A.title;
+      hero({ title:A.title, sub:'Кабинет организатора', facts:factsOf(A) });
       const total = A.players.length, wishes = A.players.filter(p=>p.hasWish).length, seen = A.players.filter(p=>p.seen).length;
       const drawn = A.status === 'drawn';
       const adminLink = playerUrl + '/admin#admin=' + key;
 
       render(
         el('section',{class:'sheet'},
-          el('span',{class:'status'+(drawn?' done':'')}, el('i'), drawn ? 'Жеребьёвка проведена' : 'Идёт запись участников'),
+          el('span',{class:'status'+(drawn?' done':'')}, el('i'), drawn ? 'Разрешения выданы' : 'Идёт приём заявок'),
           el('h2',{style:{marginTop:'14px'}},'Ссылка для участников'),
-          el('p',{class:'lead'},'Отправьте её в общий чат. По ней нельзя управлять игрой, только записаться и узнать свою пару.'),
+          el('p',{class:'lead'},'Отправьте её в рабочий чат. По ней можно только подать заявку и получить своё разрешение, управлять игрой нельзя.'),
           el('div',{class:'linkbox'}, playerUrl),
-          shareButtons('🎅 Тайный Санта «'+A.title+'»! Заходи, впиши имя и пожелание', playerUrl)),
+          shareButtons('🎅 Тайный Санта команды E-license «'+A.title+'». Подавай заявку и пиши пожелание:', playerUrl)),
 
         el('section',{class:'sheet'},
           el('h2',{},'Участники', el('span',{class:'count'}, String(total))),
           el('p',{class:'lead',style:{marginBottom:'4px'}}, drawn
-            ? 'Узнали свою пару: '+seen+' из '+total+'. С пожеланием: '+wishes+'.'
+            ? 'Получили разрешение: '+seen+' из '+total+'. С пожеланием: '+wishes+'.'
             : 'С пожеланием: '+wishes+' из '+total+'. Кто кому дарит, не видно даже вам.'),
           drawn ? el('div',{class:'progress'}, el('b',{style:{width:(total?Math.round(seen/total*100):0)+'%'}})) : null,
           el('div',{class:'people'}, total ? A.players.map(p=>el('div',{class:'person'},
             avatar(p.name),
             el('span',{class:'n'},p.name),
-            drawn ? el('span',{class:'pill'+(p.seen?' ok':'')}, p.seen?'узнал(а)':'ещё не смотрел(а)')
+            drawn ? el('span',{class:'pill'+(p.seen?' ok':'')}, p.seen?'получил(а)':'ещё не открыл(а)')
                   : el('span',{class:'pill'+(p.hasWish?' ok':'')}, p.hasWish?'есть пожелание':'без пожелания'),
             !drawn ? el('button',{class:'x',title:'Удалить','aria-label':'Удалить '+p.name,onclick:()=>confirmBox('Удалить '+p.name+'?','Участник пропадёт из игры. Он сможет записаться заново.','Удалить',act('/players/'+p.id,'DELETE'))},'✕') : null
-          )) : el('p',{class:'lead',style:{margin:'10px 0 0'}},'Пока никого. Отправьте ссылку в чат, и участники появятся здесь.')),
+          )) : el('p',{class:'lead',style:{margin:'10px 0 0'}},'Заявок пока нет. Отправьте ссылку в рабочий чат, и участники появятся здесь.')),
           !drawn
-            ? el('button',{class:'btn btn-primary block',disabled: total<3 ? true : null,onclick:()=>confirmBox('Распределить пары?','Участников: '+total+'. После жеребьёвки новые участники не смогут записаться. Пары увидят только сами участники.','Распределить',act('/draw'))}, total<3 ? 'Нужно минимум 3 участника' : 'Распределить пары')
-            : el('button',{class:'btn btn-danger block',onclick:()=>confirmBox('Отменить жеребьёвку?','Пары сбросятся, запись снова откроется. Потом нужно будет распределить заново.','Отменить жеребьёвку',act('/reset'))},'Отменить жеребьёвку')),
+            ? el('button',{class:'btn btn-primary block',disabled: total<3 ? true : null,onclick:()=>confirmBox('Распределить пары и выдать разрешения?','Участников: '+total+'. После этого приём заявок закроется. Пары увидят только сами участники.','Выдать разрешения',act('/draw'))}, total<3 ? 'Нужно минимум 3 заявки' : 'Распределить пары и выдать разрешения')
+            : el('button',{class:'btn btn-danger block',onclick:()=>confirmBox('Отозвать разрешения?','Пары сбросятся, приём заявок снова откроется. Потом нужно будет распределить заново.','Отозвать',act('/reset'))},'Отозвать разрешения и перераспределить')),
 
         el('section',{class:'plain'},
           el('h2',{},'Ваш доступ'),
