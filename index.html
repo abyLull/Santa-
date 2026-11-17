@@ -211,6 +211,11 @@
   .stamp{position:absolute;right:14px;bottom:14px;width:116px;height:116px;color:var(--stamp);opacity:0;pointer-events:none;mix-blend-mode:multiply}
   .stamp.in{animation:stamp .5s cubic-bezier(.2,1.5,.4,1) forwards}
   .stamp.on{opacity:.85;transform:rotate(-14deg)}
+  .stamp.green{color:#0f8a66}
+  .stline{position:relative;display:flex;align-items:center;gap:8px;margin-top:16px;font-size:14px;font-weight:600;color:#0f8a66}
+  .stline.pending{color:var(--muted)}
+  .stline.flip{animation:pop .5s var(--spring)}
+  .stline::before{content:'';width:8px;height:8px;border-radius:50%;background:currentColor;box-shadow:0 0 0 4px rgba(15,138,102,.15);animation:blink 1.8s infinite}
   .doc.hit{animation:hit .4s ease-out}
   .note{font-size:13.5px;color:var(--muted);text-align:center;margin:14px 0 0}
 
@@ -531,6 +536,49 @@
   }
 
   let heroTitle = '';
+  /* кнопка «удерживайте»: полоса заполняется, экран дрожит всё сильнее; в конце — onDone */
+  function makeHold({ label, canStart, onDone, dur = 1000 }){
+    const btn = el('button',{class:'hold','aria-label':label}, el('i',{class:'fill'}), el('span',{html:ICON.stamp}), el('span',{class:'hl'},label));
+    const wrap = document.querySelector('.wrap');
+    let p = 0, raf = 0, holding = false, done = false, last = 0;
+    const shake = (amp) => {
+      if (RM || !wrap) return;
+      if (!amp){ wrap.style.transform = ''; return; }
+      const r = () => (Math.random()*2-1)*amp;
+      wrap.style.transform = `translate3d(${r()}px,${r()}px,0) rotate(${r()*.12}deg)`;
+    };
+    const step = (t) => {
+      const dt = t - (last||t); last = t;
+      p = Math.max(0, Math.min(1, p + (holding ? dt/dur : -dt/(dur/2))));
+      btn.style.setProperty('--p', p);
+      shake(holding ? .4 + p*p*4.2 : 0);
+      if (holding && Math.random() < .3) haptic(Math.round(4 + p*12));
+      if (p >= 1 && !done) return finish();
+      if (holding || p > 0) raf = requestAnimationFrame(step); else { last = 0; shake(0); }
+    };
+    const start = (e) => {
+      if (done || holding) return; e.preventDefault();
+      if (canStart && !canStart()) return;
+      if (e.pointerId !== undefined) { try { btn.setPointerCapture(e.pointerId); } catch {} }
+      holding = true; btn.classList.add('pressing'); cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(step);
+    };
+    const stop = () => { if (done) return; holding = false; btn.classList.remove('pressing'); };
+    async function finish(){
+      done = true; holding = false; cancelAnimationFrame(raf); btn.classList.remove('pressing');
+      // финальный удар
+      if (!RM && wrap){ wrap.animate([{transform:'translate3d(0,7px,0) scale(.992)'},{transform:'translate3d(0,-2px,0)'},{transform:'none'}],{duration:320,easing:'cubic-bezier(.2,1.4,.4,1)'}); wrap.style.transform=''; }
+      haptic([50,30,90]);
+      try { await onDone(btn); }
+      catch(err){ done = false; p = 0; btn.style.setProperty('--p', 0); }
+    }
+    btn.addEventListener('pointerdown', start);
+    ['pointerup','pointercancel','lostpointercapture'].forEach(ev => btn.addEventListener(ev, stop));
+    btn.addEventListener('keydown', e => { if ((e.key===' '||e.key==='Enter') && !e.repeat) start(e); });
+    btn.addEventListener('keyup', stop);
+    btn.addEventListener('contextmenu', e => e.preventDefault());
+    return btn;
+  }
+
   function hero({ title, sub, facts }){
     const h = $('hero'); const same = title === heroTitle; heroTitle = title;
     const oldH1 = same ? h.querySelector('h1') : null;
@@ -637,18 +685,22 @@
         const name = el('input',{maxlength:'40',autocomplete:'given-name'});
         const pin = pinField('j-pin','Придумайте PIN из 4 цифр. Он нужен для входа с другого телефона, а если забудете, организатор его сбросит');
         const wish = el('textarea',{maxlength:'300'});
-        const btn = el('button',{class:'btn btn-main',onclick:async()=>{
-          err.textContent='';
-          if (!name.value.trim()){ err.textContent='Введите имя'; name.focus(); return; }
-          if (pin.input.value.length<4){ err.textContent='Нужно 4 цифры PIN'; pin.shake(); return; }
-          busy(btn,true);
-          try{
-            const r = await api('POST','/api/games/'+id+'/join',{ name:name.value, pin:pin.input.value, wish:wish.value });
-            S.token = r.token; ls.set('santa:token:'+id, r.token);
-            const rc = btn.getBoundingClientRect(); confetti(rc.left+rc.width/2, rc.top);
-            haptic([10,50,20]); toast('Заявка принята'); await load();
-          }catch(e){ err.textContent=e.message; busy(btn,false); }
-        }},'Подать заявку');
+        const btn = makeHold({
+          label:'Зажмите, чтобы подать заявку',
+          canStart:()=>{
+            err.textContent='';
+            if (!name.value.trim()){ err.textContent='Введите имя'; const f=name.closest('.fld'); f.animate([{transform:'translateX(-8px)'},{transform:'translateX(7px)'},{transform:'translateX(-4px)'},{transform:'none'}],{duration:380}); name.focus(); haptic([30,30,30]); return false; }
+            if (pin.input.value.length<4){ err.textContent='Придумайте PIN из 4 цифр'; pin.shake(); return false; }
+            return true;
+          },
+          onDone: async (b)=>{
+            b.querySelector('.hl').textContent = 'Отправляем заявку…';
+            try{
+              const r = await api('POST','/api/games/'+id+'/join',{ name:name.value, pin:pin.input.value, wish:wish.value });
+              S.token = r.token; ls.set('santa:token:'+id, r.token);
+              S.justJoined = true; await load();
+            }catch(e){ err.textContent=e.message; b.querySelector('.hl').textContent = 'Зажмите, чтобы подать заявку'; throw e; }
+          }});
         return [
           el('section',{class:'card'},
             el('h2',{},'Заявка на участие'),
@@ -700,7 +752,9 @@
         busy(btn,true);
         try{
           const r = await api('PUT','/api/games/'+id+'/me/wish',{ wish:ta.value },H());
-          S.me.wish = r.wish; busy(btn,false); btn.classList.add('done'); btn.innerHTML = ICON.check+'<span>Сохранено</span>'; haptic([10,40,10]);
+          S.me.wish = r.wish; busy(btn,false); btn.classList.add('done');
+          const aw = document.querySelector('.app-wish');
+          if (aw){ aw.textContent = r.wish || 'Не указано. Впишите ниже, его увидит ваш Санта.'; aw.classList.toggle('empty', !r.wish); aw.animate([{transform:'scale(.97)',background:'#fff4d8'},{transform:'none'}],{duration:500,easing:'cubic-bezier(.34,1.56,.64,1)'}); } btn.innerHTML = ICON.check+'<span>Сохранено</span>'; haptic([10,40,10]);
           setTimeout(()=>{ wrap.classList.remove('show'); S.dirty=false; }, 900);
         }catch(e){ toast(e.message); busy(btn,false); }
       }},'Сохранить пожелание');
@@ -721,15 +775,61 @@
         },true)},'Отозвать заявку') : null);
     }
 
-    /* ---------- разрешение с печатью ---------- */
-    function docNumber(){ let h=7; for (const c of id+S.me.id) h=(h*131+c.charCodeAt(0))%100000; return '№ ЕЛ-'+new Date().getFullYear()+'-'+String(h).padStart(5,'0'); }
-    const STAMP = `<svg viewBox="0 0 120 120" aria-hidden="true">
-      <defs><path id="ring" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
+    /* ---------- документы и печати ---------- */
+    function docNo(prefix, salt){ let h=7; for (const c of salt+id+S.me.id) h=(h*131+c.charCodeAt(0))%100000; return '№ '+prefix+'-'+new Date().getFullYear()+'-'+String(h).padStart(5,'0'); }
+    const docNumber = () => docNo('ЕЛ','lic');
+    let stampSeq = 0;
+    function stampSvg(word){
+      const rid = 'ring'+(++stampSeq);
+      return `<svg viewBox="0 0 120 120" aria-hidden="true">
+      <defs><path id="${rid}" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
       <circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="3"/>
       <circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <text font-family="Onest,sans-serif" font-size="10.5" font-weight="700" letter-spacing="2.2" fill="currentColor"><textPath href="#ring">ТАЙНЫЙ САНТА ✦ E-LICENSE ✦ ДЕД МОРОЗ ✦</textPath></text>
-      <text x="60" y="58" text-anchor="middle" font-family="Geologica,sans-serif" font-size="15" font-weight="800" fill="currentColor">ВЫДАНО</text>
-      <text x="60" y="74" text-anchor="middle" font-family="Onest,sans-serif" font-size="9" font-weight="700" fill="currentColor">${new Date().getFullYear()+1}</text></svg>`;
+      <text font-family="Inter,sans-serif" font-size="10.5" font-weight="700" letter-spacing="2.2" fill="currentColor"><textPath href="#${rid}">ТАЙНЫЙ САНТА ✦ E-LICENSE ✦ ДЕД МОРОЗ ✦</textPath></text>
+      <text x="60" y="58" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="900" fill="currentColor" textLength="${word.length>6?62:56}" lengthAdjust="spacingAndGlyphs">${word}</text>
+      <text x="60" y="74" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="currentColor">${new Date().getFullYear()+1}</text></svg>`;
+    }
+    const STAMP = stampSvg('ВЫДАНО');
+    function addTilt(doc){
+      if (RM) return;
+      const tilt = (x,y) => { const b = doc.getBoundingClientRect(); const rx = ((y-b.top)/b.height-.5)*-7, ry = ((x-b.left)/b.width-.5)*7;
+        doc.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`; };
+      doc.addEventListener('pointermove', e => tilt(e.clientX, e.clientY));
+      doc.addEventListener('pointerleave', () => { doc.style.transform=''; });
+    }
+
+    /* заявление на участие: при подаче печать «ОДОБРЕНО» ставится с анимацией */
+    function applicationDoc(animate){
+      const g = S.game;
+      const stamp = el('span',{class:'stamp green'+(animate && !RM ? '' : ' on'),html:stampSvg('ОДОБРЕНО')});
+      const anim = animate && !RM;
+      const stl = el('div',{class:'stline'+(anim?' pending':'')}, anim ? 'На рассмотрении у Деда Мороза…' : 'Одобрено. Ждём жеребьёвку');
+      const wishNode = S.me.wish ? el('div',{class:'wishv app-wish'}, S.me.wish) : el('div',{class:'wishv empty app-wish'}, 'Не указано. Впишите ниже, его увидит ваш Санта.');
+      const doc = el('div',{class:'doc'},
+        el('div',{class:'doc-h'}, el('span',{class:'mk',html:'E-<b>license</b>'}), el('span',{},'Заявление')),
+        el('h3',{},'Заявка на участие в «Тайном Санте»'),
+        el('div',{class:'no'}, docNo('З','app')),
+        el('div',{class:'f'}, el('small',{},'Заявитель'), el('div',{class:'v'}, S.me.name)),
+        el('div',{class:'f'}, el('small',{},'Мероприятие'), el('div',{class:'v'}, g.title)),
+        el('div',{class:'f'}, el('small',{},'Пожелание заявителя'), wishNode),
+        stl,
+        el('div',{class:'sign'}, el('small',{},'Рассмотрел'), el('i',{},'Дед Мороз')),
+        stamp);
+      addTilt(doc);
+      if (animate && !RM){
+        requestAnimationFrame(()=>doc.scrollIntoView({behavior:'smooth', block:'center'}));
+        setTimeout(()=>stamp.classList.add('in'), 650);
+        setTimeout(()=>{
+          doc.classList.add('hit'); haptic([40,30,80]);
+          stl.textContent = 'Одобрено. Ждём жеребьёвку'; stl.classList.remove('pending'); stl.classList.add('flip');
+          const b = stamp.getBoundingClientRect(); confetti(b.left+b.width/2, b.top+b.height/2);
+          toast('Заявка одобрена 🎉');
+        }, 980);
+      }
+      return doc;
+    }
+
+    /* ---------- разрешение с печатью ---------- */
 
     function licenseDoc(r){
       const g = S.game, key = 'santa:opened:'+id, opened = !!ls.get(key) || RM;
@@ -748,35 +848,12 @@
         el('div',{class:'sign'}, el('small',{},'Подпись уполномоченного лица'), el('i',{},'Дед Мороз')),
         stamp);
 
-      // лёгкий 3D-наклон за пальцем
-      if (!RM){
-        const tilt = (x,y) => { const b = doc.getBoundingClientRect(); const rx = ((y-b.top)/b.height-.5)*-7, ry = ((x-b.left)/b.width-.5)*7;
-          doc.style.transform = `perspective(900px) rotateX(${rx}deg) rotateY(${ry}deg)`; };
-        doc.addEventListener('pointermove', e => tilt(e.clientX, e.clientY));
-        doc.addEventListener('pointerleave', () => { doc.style.transform=''; });
-      }
+      addTilt(doc);
       if (opened) return [doc, el('p',{class:'note'},'Документ конфиденциальный. Никому не показывайте 🤫')];
 
-      // удерживайте, чтобы поставить печать
-      const hold = el('button',{class:'hold','aria-label':'Удерживайте, чтобы поставить печать'},
-        el('i',{class:'fill'}), el('span',{html:ICON.stamp}), el('span',{},'Удерживайте, чтобы поставить печать'));
-      let p = 0, raf = 0, holding = false, done = false, last = 0;
-      const DUR = 900;
-      const step = (t) => {
-        const dt = t - (last||t); last = t;
-        p = Math.max(0, Math.min(1, p + (holding ? dt/DUR : -dt/(DUR/2))));
-        hold.style.setProperty('--p', p);
-        if (holding && Math.random() < .25) haptic(4);
-        if (p >= 1 && !done) return finish();
-        if (holding || p > 0) raf = requestAnimationFrame(step); else last = 0;
-      };
-      const start = (e) => { if (done) return; e.preventDefault();
-        if (e.pointerId !== undefined) { try { hold.setPointerCapture(e.pointerId); } catch {} }
-        holding = true; hold.classList.add('pressing'); cancelAnimationFrame(raf); last = 0; raf = requestAnimationFrame(step); };
-      const stop = () => { if (done) return; holding = false; hold.classList.remove('pressing'); };
-      function finish(){
-        done = true; holding = false; cancelAnimationFrame(raf); ls.set(key,'1');
-        hold.classList.remove('pressing');
+      // удерживайте, чтобы поставить печать (экран дрожит, потом удар)
+      const hold = makeHold({ label:'Зажмите, чтобы поставить печать', dur:900, onDone: async ()=>{
+        ls.set(key,'1');
         stamp.classList.add('in');
         setTimeout(()=>{
           doc.classList.add('hit'); doc.classList.remove('locked'); haptic([40,30,80]);
@@ -784,12 +861,7 @@
         }, 330);
         hold.style.transition='opacity .4s, transform .4s'; hold.style.opacity='0'; hold.style.transform='scale(.9)';
         setTimeout(()=>{ hold.replaceWith(el('p',{class:'note'},'Документ конфиденциальный. Никому не показывайте 🤫')); }, 420);
-      }
-      hold.addEventListener('pointerdown', start);
-      ['pointerup','pointercancel','lostpointercapture'].forEach(ev => hold.addEventListener(ev, stop));
-      hold.addEventListener('keydown', e => { if ((e.key===' '||e.key==='Enter') && !e.repeat) start(e); });
-      hold.addEventListener('keyup', stop);
-      hold.addEventListener('contextmenu', e => e.preventDefault());
+      }});
       return [doc, hold];
     }
 
@@ -804,11 +876,14 @@
             wishEditor(), accountLinks())
         ];
       }
+      const fresh = !!S.justJoined; S.justJoined = false;
       return [
         el('section',{class:'card'},
-          el('h2',{},'Привет, '+S.me.name),
-          el('div',{class:'wait'}, el('span',{class:'orbit'}),
-            el('p',{}, el('b',{},'Заявка на рассмотрении у Деда Мороза'),'После жеребьёвки здесь появится ваше разрешение на подарок.')),
+          applicationDoc(fresh),
+          el('p',{class:'note'},'После жеребьёвки здесь появится разрешение на вручение подарка с именем коллеги.')),
+        el('section',{class:'card'},
+          el('h2',{},'Ваше пожелание'),
+          el('p',{class:'lead'},'Его увидит ваш Тайный Санта. Можно поменять в любой момент.'),
           wishEditor()),
         participants(g),
         el('section',{class:'bare',style:{paddingTop:0}},
