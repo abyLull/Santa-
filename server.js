@@ -276,7 +276,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, 'http://x');
   const p = url.pathname;
   try {
-    if (req.method === 'GET' && (p === '/' || /^\/g\/[a-z0-9]+\/?$/.test(p))) return send(res, 200, INDEX);
+    if (req.method === 'GET' && (p === '/' || /^\/g\/[a-z0-9]+(\/admin)?\/?$/.test(p))) return send(res, 200, INDEX);
     if (req.method === 'GET' && p === '/healthz') return send(res, 200, { ok: true, store: store.kind });
     for (const [method, re, handler] of routes) {
       if (req.method !== method) continue;
