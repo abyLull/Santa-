@@ -66,6 +66,9 @@
   .fl svg{display:block;width:100%;height:100%}
   @keyframes bob{0%,100%{transform:translateY(0) rotate(var(--r0))}50%{transform:translateY(-16px) rotate(var(--r1))}}
 
+  html,body{overflow-x:hidden;max-width:100%}
+  .wrap{overflow-x:clip;overflow-y:visible}
+  .floaters,.sky{overflow:hidden}
   .wrap{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:max(20px,env(safe-area-inset-top)) 20px max(36px,env(safe-area-inset-bottom))}
 
   /* ---------- шапка ---------- */
@@ -362,7 +365,7 @@
   .poster img{width:min(78vw,340px);height:auto;display:block;margin:18px auto;border-radius:14px}
   .poster p{color:var(--muted);margin:0}
   @media print{
-    .sky,.floaters,.grain,.top,.foot,.toast,.no-print{display:none!important}
+    .sky,.floaters,.grain,.top,.foot,.toast,.no-print,.gl{display:none!important}
     body,html{background:#fff!important}
     .poster{box-shadow:none}
     h1{-webkit-print-color-adjust:exact;print-color-adjust:exact}
@@ -583,7 +586,7 @@
     'Тайный Санта команды E-license':'E-license командасының Жасырын Сантасы','Подайте заявку на участие 🎁':'Қатысуға өтініш беріңіз 🎁','QR-код':'QR-код',
     'Наведите камеру телефона на QR-код':'Телефон камерасын QR-кодқа бағыттаңыз','Распечатать':'Басып шығару','Тайный Санта':'Жасырын Санта','Загружаем…':'Жүктелуде…',
     'Пары знает только сервер, даже организатор их не видит.':'Жұптарды тек сервер біледі, оларды тіпті ұйымдастырушы да көрмейді.',
-    'Ночная тема':'Түнгі тақырып',
+    'Ночная тема':'Түнгі тақырып','Спросить получателя':'Алушыдан сұрау','Удалить заявку?':'Өтінішті жоясыз ба?',
     'Внутренняя игра команды, не государственная услуга.':'Команданың ішкі ойыны, мемлекеттік қызмет емес.','Тайный Санта · E-license':'Жасырын Санта · E-license',
     // ошибки сервера
     'PIN должен состоять из 4 цифр':'PIN 4 саннан тұруы керек','Нет доступа организатора':'Ұйымдастырушы қолжетімділігі жоқ','Нужно войти':'Кіру қажет',
@@ -613,6 +616,7 @@
     [/^Участников: (\d+)(?:, исключений: (\d+))?\. Пары распределятся одной цепочкой, приём заявок закроется\. Кто кому дарит, увидят только сами участники\.$/,
       (m,a,b) => 'Қатысушылар: '+a+(b?', ерекшеліктер: '+b:'')+'. Жұптар бір тізбекпен бөлінеді, өтініш қабылдау жабылады. Кім кімге сыйлайтынын тек қатысушылардың өздері көреді.'],
     [/^Действия: (.+)$/, 'Әрекеттер: $1'],
+    [/^(.+) пропадёт из игры\. Подать заявку заново можно будет по той же ссылке\.$/, '$1 ойыннан шығарылады. Өтінішті сол сілтеме арқылы қайта беруге болады.'],
     [/^Ошибка (\d+)$/, 'Қате $1'],
     [/^(.+) · Тайный Санта$/, '$1 · Жасырын Санта'],
     [/^Кабинет организатора · (.+)$/, 'Ұйымдастырушы кабинеті · $1'],
@@ -644,6 +648,7 @@
       if (m.type === 'characterData') translateTree(m.target);
       else if (m.type === 'attributes') { const v = m.target.getAttribute(m.attributeName); if (v){ const t = tr(v); if (t !== v) m.target.setAttribute(m.attributeName, t); } }
       else m.addedNodes.forEach(n => translateTree(n));
+      requestAnimationFrame(() => fitStamps());
     })).observe(document.documentElement, { subtree:true, childList:true, characterData:true, attributes:true, attributeFilter:['placeholder','aria-label','title','alt'] });
     translateTree(document.documentElement);
   }
@@ -686,6 +691,18 @@
     b.addEventListener('click', () => { ls.set('santa:lang', LANG==='kk' ? 'ru' : 'kk'); haptic(10); location.reload(); });
     top.append(b);
   })();
+
+  /* надпись по кругу печати: подгоняем размер так, чтобы она ровно занимала окружность и не налезала сама на себя */
+  function fitStamps(root){
+    (root || document).querySelectorAll('.stamp text.ring').forEach(t => {
+      const tp = t.querySelector('textPath'); if (!tp || !tp.getComputedTextLength) return;
+      const len = tp.getComputedTextLength(); if (!len) return;
+      const avail = 2*Math.PI*44 - 10, fs = parseFloat(t.getAttribute('font-size')) || 9;
+      const next = Math.max(5.5, Math.min(11, fs * avail*0.97 / len));
+      if (Math.abs(next - fs) > .05) t.setAttribute('font-size', next.toFixed(2));
+    });
+  }
+  if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => fitStamps());
 
   let toastT;
   function toast(msg){ const t=$('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove('show'),2300); }
@@ -1030,7 +1047,7 @@
     let n = 0;
     text.split(' ').forEach((word, wi) => {
       if (wi) h1.append(' ');
-      const w = el('span',{class:'w','aria-hidden':'true'});
+      const w = el('span',{class:'w','aria-hidden':'true',style:{whiteSpace:[...word].length > 11 ? 'normal' : 'nowrap'}});
       for (const ch of word){
         w.append(el('span',{class:'l',style:{'--d':(120 + n*32)+'ms'}}, el('span',{class:'le'},ch), el('span',{class:'lf'},ch), el('span',{class:'ls'},ch)));
         n++;
@@ -1198,9 +1215,13 @@
       box, el('button',{class:'btn btn-line',onclick:play},'Показать ещё раз'), extra||null);
   }
   function render(...nodes){
-    const a=$('app'); a.innerHTML=''; a.classList.remove('enter'); void a.offsetWidth;
+    const a=$('app'), y = window.scrollY;
+    // при тихом обновлении держим высоту и позицию прокрутки, чтобы страница не прыгала наверх
+    if (render.quiet) a.style.minHeight = a.offsetHeight + 'px';
+    a.innerHTML=''; a.classList.remove('enter'); void a.offsetWidth;
     if (!render.quiet) a.classList.add('enter');
     nodes.flat().forEach(n=>n && a.append(n));
+    if (render.quiet){ window.scrollTo(0, y); requestAnimationFrame(()=>{ a.style.minHeight = ''; window.scrollTo(0, y); }); }
   }
   function rememberGame(id, title, admin){
     const all = JSON.parse(ls.get('santa:games') || '[]');
@@ -1398,11 +1419,16 @@
       <defs><path id="${rid}" d="M60,60 m-44,0 a44,44 0 1,1 88,0 a44,44 0 1,1 -88,0"/></defs>
       <circle cx="60" cy="60" r="56" fill="none" stroke="currentColor" stroke-width="3"/>
       <circle cx="60" cy="60" r="36" fill="none" stroke="currentColor" stroke-width="1.5"/>
-      <text font-family="Inter,sans-serif" font-size="10.5" font-weight="700" letter-spacing="2.2" fill="currentColor"><textPath href="#${rid}">ТАЙНЫЙ САНТА ✦ E-LICENSE ✦ ДЕД МОРОЗ ✦</textPath></text>
+      <text class="ring" font-family="Inter,sans-serif" font-size="9" font-weight="700" letter-spacing="1.4" fill="currentColor"><textPath href="#${rid}">ТАЙНЫЙ САНТА ✦ E-LICENSE ✦ ДЕД МОРОЗ ✦</textPath></text>
       <text x="60" y="58" text-anchor="middle" font-family="Inter,sans-serif" font-size="13" font-weight="900" fill="currentColor" textLength="${word.length>6?62:56}" lengthAdjust="spacingAndGlyphs">${word}</text>
-      <text x="60" y="74" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="currentColor">${new Date().getFullYear()+1}</text></svg>`;
+      <text x="60" y="74" text-anchor="middle" font-family="Inter,sans-serif" font-size="9" font-weight="700" fill="currentColor">${stampYear()}</text></svg>`;
     }
-    const STAMP = stampSvg('ВЫДАНО');
+    // год праздника: по дате обмена (ноябрь–декабрь → следующий год), иначе по текущей дате
+    function stampYear(){
+      const d = isISO(S.game && S.game.date) ? new Date(S.game.date+'T00:00:00') : new Date();
+      return d.getMonth() >= (isISO(S.game && S.game.date) ? 10 : 8) ? d.getFullYear()+1 : d.getFullYear();
+    }
+    const STAMP = () => stampSvg('ВЫДАНО');
     function addTilt(doc){
       if (RM) return;
       const tilt = (x,y) => { const b = doc.getBoundingClientRect(); const rx = ((y-b.top)/b.height-.5)*-7, ry = ((x-b.left)/b.width-.5)*7;
@@ -1414,7 +1440,7 @@
     /* заявление на участие: при подаче печать «ОДОБРЕНО» ставится с анимацией */
     function applicationDoc(animate){
       const g = S.game;
-      const stamp = el('span',{class:'stamp green'+(animate && !RM ? '' : ' on'),html:stampSvg('ОДОБРЕНО')});
+      const stamp = el('span',{class:'stamp green'+(animate && !RM ? '' : ' on'),html:stampSvg('ОДОБРЕНО')}); requestAnimationFrame(()=>fitStamps(stamp));
       const anim = animate && !RM;
       const stl = el('div',{class:'stline'+(anim?' pending':'')}, anim ? 'На рассмотрении у Деда Мороза…' : 'Одобрено. Ждём жеребьёвку');
       const wishNode = S.me.wish ? el('div',{class:'wishv app-wish'}, wishContent(S.me.wish)) : el('div',{class:'wishv empty app-wish'}, 'Не указано. Впишите ниже, его увидит ваш Санта.');
@@ -1445,8 +1471,8 @@
     /* ---------- разрешение с печатью ---------- */
 
     function licenseDoc(r){
-      const g = S.game, key = 'santa:opened:'+id, opened = !!ls.get(key) || RM;
-      const stamp = el('span',{class:'stamp'+(opened?' on':''),html:STAMP});
+      const g = S.game, key = 'santa:opened:'+id+':'+r.name, opened = !!ls.get(key) || RM;
+      const stamp = el('span',{class:'stamp'+(opened?' on':''),html:STAMP()}); requestAnimationFrame(()=>fitStamps(stamp));
       const doc = el('div',{class:'doc'+(opened?'':' locked')},
         el('div',{class:'doc-h'}, el('span',{class:'mk',html:'E-<b>license</b>'}), el('span',{},'Разрешительный документ')),
         el('h3',{},'Разрешение на вручение подарка'),
@@ -1511,7 +1537,7 @@
         el('div',{class:'tiles'},
           el('button',{class:'tile',onclick:()=>openChat('recipient')},
             el('span',{class:'ic',html:IC.ask}),
-            el('span',{}, el('b',{},'Спросить '+r.name), el('small',{},'Размер, любимый цвет, чай или кофе')),
+            el('span',{}, el('b',{},'Спросить получателя'), el('small',{}, r.name+' не узнает, что это вы')),
             badge(S.unread.fromRecipient)),
           el('button',{class:'tile',onclick:()=>openChat('santa')},
             el('span',{class:'ic',html:IC.mask,style:{background:'#f1ecff',color:'#7c5cf6'}}),
@@ -1528,7 +1554,7 @@
       const ta = el('textarea',{rows:'1',maxlength:'300',placeholder:'Сообщение…'});
       const sendBtn = el('button',{class:'send','aria-label':'Отправить',html:IC.send});
       let timer = 0, lastLen = -1;
-      const close = () => { clearInterval(timer); sh.classList.add('out'); bg.style.transition='opacity .25s'; bg.style.opacity='0'; setTimeout(()=>{ bg.remove(); load(); },250); };
+      const close = () => { clearInterval(timer); sh.classList.add('out'); bg.style.transition='opacity .25s'; bg.style.opacity='0'; setTimeout(()=>{ bg.remove(); render.quiet = true; load().finally(()=>{ render.quiet = false; }); },250); };
       const sh = el('div',{class:'sheet tall',role:'dialog','aria-modal':'true'},
         el('div',{class:'grab'}),
         el('div',{class:'chat'},
@@ -1659,7 +1685,7 @@
       const close = () => { sh.classList.add('out'); bg.style.transition='opacity .25s'; bg.style.opacity='0'; setTimeout(()=>bg.remove(),250); };
       const sh = el('div',{class:'sheet',role:'dialog','aria-modal':'true'}, el('div',{class:'grab'}), el('h3',{},'Настройки игры'),
         fld('e-title','Название',t), el('div',{class:'pair'}, fld('e-budget','Бюджет',b), fld('e-date','Дата обмена',d,{always:true})),
-        el('button',{class:'btn btn-main',onclick:async()=>{ try{ await call('','PUT',{ title:t.value, budget:b.value, date:d.value }); close(); toast('Сохранено'); }catch(e){ toast(e.message); } }},'Сохранить'),
+        el('button',{class:'btn btn-main',onclick:async()=>{ try{ const body = { title:t.value, budget:b.value }; if (d.value || isISO(A.date)) body.date = d.value; await call('','PUT',body); close(); toast('Сохранено'); }catch(e){ toast(e.message); } }},'Сохранить'),
         el('button',{class:'btn btn-line',onclick:close},'Отмена'));
       const bg = el('div',{class:'sheet-bg',onclick:(e)=>{ if (e.target===bg) close(); }}, sh);
       document.body.append(bg);
@@ -1725,7 +1751,7 @@
             el('button',{class:'x','aria-label':'Действия: '+p.name,html:ICON.more,onclick:()=>actions(p.name,
               drawn ? 'После сброса PIN войти под участником технически сможете и вы. Сообщите 0000 только ему, при входе он сразу задаст новый PIN.' : null,
               [ { label:'Сбросить PIN на 0000', run:()=>sheet('Сбросить PIN?', p.name+' выйдет со всех устройств. Войти можно будет с PIN 0000, после чего система попросит придумать новый.', 'Сбросить на 0000', async()=>{ await act('/players/'+p.id+'/reset-pin')(); toast('PIN сброшен на 0000'); }) },
-                !drawn ? { label:'Удалить заявку', danger:true, run:()=>sheet('Удалить '+p.name+'?','Заявка пропадёт. Участник сможет подать её заново.','Удалить',act('/players/'+p.id,'DELETE'),true) } : null ])})
+                !drawn ? { label:'Удалить заявку', danger:true, run:()=>sheet('Удалить заявку?', p.name+' пропадёт из игры. Подать заявку заново можно будет по той же ссылке.','Удалить',act('/players/'+p.id,'DELETE'),true) } : null ])})
           )) : el('li',{}, el('span',{class:'lead',style:{margin:0}},'Заявок пока нет. Отправьте ссылку в рабочий чат.'))),
           !drawn
             ? el('button',{class:'btn btn-main',disabled: total<3 ? true : null,onclick:()=>sheet('Выдать разрешения?','Участников: '+total+(A.exclusions.length?', исключений: '+A.exclusions.length:'')+'. Пары распределятся одной цепочкой, приём заявок закроется. Кто кому дарит, увидят только сами участники.','Распределить и выдать',act('/draw'))}, total<3 ? 'Нужно минимум 3 заявки' : 'Распределить пары')
