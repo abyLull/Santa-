@@ -117,9 +117,9 @@
   @keyframes lshine{0%,78%{background-position:130% 0}100%{background-position:-30% 0}}
   .scrolling .tw .ls{animation-play-state:paused}
   /* ---------- гирлянда на крючках: canvas с физикой ---------- */
-  .gl{position:relative;width:min(100%,460px);height:84px;margin:-10px 0 -12px;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
+  .gl{position:relative;z-index:4;width:min(100%,460px);height:84px;margin:-10px 0 -12px;touch-action:none;cursor:grab;-webkit-tap-highlight-color:transparent}
   .gl:active{cursor:grabbing}
-  .gl canvas{display:block;width:100%;height:100%}
+  .gl canvas{position:absolute;left:-36px;top:-28px;width:calc(100% + 72px);height:158px;pointer-events:none}
   .sub{color:var(--muted);font-size:16.5px;margin:0;max-width:32ch;text-wrap:balance}
   .facts{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:18px}
   .fact{font-size:14px;font-weight:600;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.72);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);border:1px solid rgba(255,255,255,.9)}
@@ -951,24 +951,86 @@
     const box = el('div',{class:'gl','aria-hidden':'true'}), cv = document.createElement('canvas'); box.append(cv);
     const ctx = cv.getContext('2d');
     const COLS = [['#ff4d5e','#5a1520'],['#ffcf4a','#5c4510'],['#3ddc84','#0f4a2c'],['#4aa3ff','#12305a'],['#d66bff','#3e1656'],['#ff9a3c','#5a2c0c']];
-    const H = 84, TOPY = 10;
-    let W = 0, dpr = 1, P = [], pins = [], bulbs = [], sparks = [], grab = null, party = 0, mode = 0, visible = true, last = 0, lastTap = 0;
+    const H = 84, CH = 324, SH = 130, TOPY = 10, PX = 36, PT = 28;   // PX/PT — поля вокруг полосы; SH — высота холста в покое, CH — пока гирлянда свисает
+    let curH = SH, calm = 0;
+    const PULL0 = 22;                                   // до 22 px можно тянуть сколько угодно              // H — высота полосы, CH — холст с запасом вниз: оторванная гирлянда свисает поверх надписи
+    let W = 0, dpr = 1, P = [], pins = [], anchors = [], bulbs = [], gv = 0, gPrev = null, idle = 0, fallT = 0, clearH = CH, sparks = [], grab = null, party = 0, mode = 0, visible = true, last = 0, lastTap = 0;
     const hex = (h) => [1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
     const mix = (a,b,t) => { const A = hex(a), B = hex(b); return 'rgb('+A.map((v,i)=>Math.round(B[i]+(v-B[i])*t)).join(',')+')'; };
     function build(){
       const w = Math.round(box.clientWidth); if (!w || w === W) return; W = w;
-      dpr = Math.min(2, window.devicePixelRatio || 1); cv.width = W*dpr; cv.height = H*dpr; ctx.setTransform(dpr,0,0,dpr,0,0);
+      dpr = Math.min(2, window.devicePixelRatio || 1); sizeCv(curH);
       const N = Math.max(36, Math.round(W/8)), span = W - 16;
       P = []; for (let k=0;k<=N;k++){ const x = 8 + span*k/N; P.push({ x, y:TOPY, px:x, py:TOPY }); }
-      pins = [0, Math.round(N/3), Math.round(2*N/3), N];
+      anchors = [0, Math.round(N/3), Math.round(2*N/3), N].map(k => ({ k, x:P[k].x, y:TOPY, on:true, back:false, stress:0, shake:0, tough:.8+Math.random()*.45 }));
+      syncPins(); fallT = 0;
       P.rest = span/N*1.13;
       bulbs = [];
       let ci = 0;
       for (let k=2;k<N-1;k+=3){ if (pins.some(q=>Math.abs(q-k)<2)) continue; bulbs.push({ k, c:ci++ % COLS.length, a:0, av:0, flash:0, ph:Math.random()*6.28, fr:.6+Math.random()*1.1 }); }
       for (let i=0;i<400;i++) step(1/60, true);
     }
+    function sizeCv(h){
+      curH = h; cv.width = (W+2*PX)*dpr; cv.height = (h+PT)*dpr; cv.style.height = (h+PT)+'px';
+      ctx.setTransform(dpr,0,0,dpr,PX*dpr,PT*dpr); clearH = h;
+    }
+    function syncPins(){ pins = anchors.filter(a => a.on || a.back).map(a => a.k); }
+    // ---- обрыв: крючок копит «усталость», если гирлянду резко дёргают или сильно тянут ----
+    function popHook(a){
+      a.on = false; a.back = false; a.stress = 0; syncPins();
+      const q = P[a.k], dir = a.k === 0 ? -1 : a.k === P.length-1 ? 1 : (Math.random() < .5 ? -1 : 1);
+      q.px = q.x - dir*3; q.py = q.y + 2;                                   // конец срывается и отлетает
+      for (let i=0;i<16;i++){ const an = Math.random()*6.28, v = 50+Math.random()*130; sparks.push({ x:a.x, y:a.y, vx:Math.cos(an)*v, vy:Math.sin(an)*v-80, life:.5+Math.random()*.4, c: i%2 ? '#ffd76a' : '#fff3c4' }); }
+      haptic([25,30,45]);
+      if (anchors.every(x => !x.on)){ grab = null; fallT = 1.6; haptic([40,50,80]); }   // сорвана целиком — падает и вешается заново
+    }
+    function rehang(){                                                       // новая гирлянда опускается сверху на крючки
+      anchors.forEach(a => { a.on = true; a.back = false; a.stress = 0; a.shake = 0; a.tough = .8+Math.random()*.45; }); syncPins();
+      P.forEach((q,k) => { const a = anchors.find(x => x.k === k); q.x = q.px = a ? a.x : q.x; if (!a){ q.x = q.px = 8 + (W-16)*k/(P.length-1); } q.y = q.py = a ? TOPY : -40 - Math.random()*20; });
+      bulbs.forEach(b => { b.a = 0; b.av = (Math.random()-.5)*4; b.flash = .6; });
+      fallT = 0; idle = 0;
+    }
+    function strain(dt){
+      // скорость руки (сглаженная) и натяжение провода у каждого крючка
+      if (grab){ if (gPrev){ const v = Math.hypot(grab.x-gPrev.x, grab.y-gPrev.y)/Math.max(dt,1e-3); gv += (v-gv)*.35; } gPrev = { x:grab.x, y:grab.y }; idle = 0; }
+      else { gv *= .8; gPrev = null; idle += dt; }
+      // основную нагрузку держат ближайшие к руке крючки слева и справа
+      let L = null, Rr = null;
+      if (grab) for (const a of anchors){ if (!a.on) continue; if (a.k <= grab.k) L = a; if (a.k >= grab.k && !Rr) Rr = a; }
+      // натяжение: насколько далеко оттянули провод от того места, где его взяли
+      const pull = grab ? Math.hypot(grab.x - grab.x0, grab.y - grab.y0) : 0;
+      for (const a of anchors){
+        if (!a.on){ continue; }
+        let add = 0;
+        if (grab){
+          const w = (a === L || a === Rr) ? 1 : .25;
+          add = w * a.tough * Math.max(0, gv-260)/650;                       // резкие рывки
+          if (a === L || a === Rr) add += a.tough * Math.min(.9, Math.max(0, pull - PULL0) / 55);   // натянули и держат — крючок постепенно сдаётся
+        }
+        a.stress = add ? a.stress + add*dt : Math.max(0, a.stress - dt*.35);
+        a.shake = Math.max(0, (a.stress - .3)/.7);
+        // крючок понемногу вытягивает из стены в сторону руки и он мелко дрожит; с него сыплется золотая пыль
+        const t = performance.now()/1000, q = P[a.k];
+        if (grab && a.shake > 0){ const dx = grab.x - a.x, dy = grab.y - a.y, d = Math.hypot(dx,dy) || 1; a.dx = dx/d; a.dy = dy/d; }
+        const off = a.shake*3.2, tr = Math.sin(t*46 + a.k)*a.shake*.9;
+        q.x = a.x + (a.dx||0)*off - (a.dy||0)*tr; q.y = a.y + (a.dy||0)*off + (a.dx||0)*tr; q.px = q.x; q.py = q.y;
+        if (a.shake > .15 && Math.random() < dt*(3 + 14*a.shake)) sparks.push({ x:q.x + (Math.random()-.5)*4, y:q.y + 2, vx:(Math.random()-.5)*18, vy:10 + Math.random()*20, life:.55 + Math.random()*.4, c: Math.random() < .5 ? '#e9c46a' : '#fff1c1', r:.6 + Math.random()*.7 });
+        if (a.stress > .75 && Math.random() < dt*5) haptic(4);                // крючок «скрипит»
+        if (a.stress >= 1) popHook(a);
+      }
+      // лампочки рядом с напряжённым крючком начинают мигать, как от плохого контакта
+      for (const b of bulbs){ let st = 0; for (const a of anchors) if (a.on) st = Math.max(st, a.shake * Math.max(0, 1 - Math.abs(b.k - a.k)/8)); b.strain = st; }
+      // отпустили — через пару секунд крючки сами подтягивают концы обратно
+      if (!grab && fallT <= 0 && idle > 2.2) anchors.forEach(a => { if (!a.on && !a.back){ a.back = true; syncPins(); } });
+      for (const a of anchors) if (a.back){
+        const q = P[a.k]; q.x += (a.x-q.x)*.12; q.y += (a.y-q.y)*.12; q.px = q.x; q.py = q.y;
+        if (Math.hypot(a.x-q.x, a.y-q.y) < 1.5){ a.back = false; a.on = true; q.x = a.x; q.y = a.y; syncPins(); }
+      }
+      if (fallT > 0){ fallT -= dt; if (fallT <= 0) rehang(); }
+    }
     function step(dt, quiet){
       const g = 1400, damp = .985, t = performance.now()/1000;
+      if (!quiet) strain(dt);
       for (let k=0;k<P.length;k++){
         if (pins.includes(k) || (grab && grab.k === k)) continue;
         const q = P[k], vx = (q.x-q.px)*damp, vy = (q.y-q.py)*damp;
@@ -982,7 +1044,7 @@
           const s2 = fa+fb ? 1/(fa+fb) : 0;
           a.x += dx*diff*fa*s2; a.y += dy*diff*fa*s2; b.x -= dx*diff*fb*s2; b.y -= dy*diff*fb*s2;
         }
-        if (grab){ const q = P[grab.k]; q.x = grab.x; q.y = Math.min(H-6, grab.y); }
+        if (grab){ const q = P[grab.k]; q.x = grab.x; q.y = Math.min(H+60, grab.y); }
       }
       // лампочки — маятники: наклоняются от движения провода
       for (const b of bulbs){
@@ -996,6 +1058,7 @@
     }
     function bright(b, i, t){
       if (RM) return .9;
+      if (b.strain > .1 && Math.random() < b.strain*.5) return .08 + Math.random()*.25;   // перебои контакта
       if (party > 0) return (Math.sin(t*22 + i*1.3) > 0) ? 1 : .25;
       if (mode === 0){ const v = Math.sin(t*3.2 - i*.55); return .25 + .75*Math.pow(Math.max(0,v),1.6); }      // бегущий огонь
       return .3 + .7*Math.pow((Math.sin(t*b.fr*3 + b.ph)+1)/2, 2);                                            // вразнобой
@@ -1003,18 +1066,32 @@
     function draw(){
       if (!P.length) return;
       const t = performance.now()/1000, dark = document.documentElement.classList.contains('dark');
-      ctx.clearRect(0,0,W,H);
+      let maxY = 0; for (const q of P) if (q.y > maxY) maxY = q.y; for (const s3 of sparks) if (s3.y > maxY) maxY = s3.y;
+      // большой холст нужен, только пока что-то свисает ниже полосы; в покое — маленький, чтобы не нагружать телефон
+      if (curH === SH && maxY + 70 > SH) sizeCv(CH);
+      else if (curH === CH){ calm = maxY + 70 < SH && anchors.every(a => a.on) ? calm + 1 : 0; if (calm > 30){ sizeCv(SH); calm = 0; } }
+      ctx.clearRect(-PX,-PT,W+2*PX,Math.min(curH, clearH)+PT);
+      clearH = Math.min(curH, Math.ceil(maxY) + 70);
       // провод
       ctx.lineCap = 'round'; ctx.lineJoin = 'round';
       const path = () => { ctx.beginPath(); ctx.moveTo(P[0].x,P[0].y); for (let k=1;k<P.length-1;k++){ const mx=(P[k].x+P[k+1].x)/2, my=(P[k].y+P[k+1].y)/2; ctx.quadraticCurveTo(P[k].x,P[k].y,mx,my); } ctx.lineTo(P[P.length-1].x,P[P.length-1].y); };
       path(); ctx.strokeStyle = dark ? '#3c6a55' : '#24402f'; ctx.lineWidth = 2; ctx.stroke();
       path(); ctx.strokeStyle = 'rgba(255,255,255,.28)'; ctx.lineWidth = .7; ctx.stroke();
       // крючки
-      for (const k of pins){ const q = P[k]; const gr = ctx.createRadialGradient(q.x-1,q.y-1,0,q.x,q.y,4.5); gr.addColorStop(0,'#fff6d5'); gr.addColorStop(.5,'#d4a944'); gr.addColorStop(1,'#7a5a17');
-        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x,q.y,4.2,0,7); ctx.fill(); }
+      for (const a of anchors){
+        const q = a.on ? P[a.k] : a;
+        if (a.on && a.shake > .05){                                          // тёплое мерцание вокруг крючка — чем сильнее нагрузка, тем чаще пульс
+          const pulse = .55 + .45*Math.sin(t*(7 + 13*a.shake)), R2 = 7 + 5*a.shake;
+          const hg = ctx.createRadialGradient(q.x, q.y, 0, q.x, q.y, R2); const hc = dark ? '255,214,120' : '245,176,60'; hg.addColorStop(0, 'rgba('+hc+','+(a.shake*(dark ? .55 : .7)*pulse)+')'); hg.addColorStop(1, 'rgba('+hc+',0)');
+          ctx.fillStyle = hg; ctx.beginPath(); ctx.arc(q.x, q.y, R2, 0, 7); ctx.fill();
+        }
+        if (a.on && a.shake > .05){ ctx.fillStyle = 'rgba(60,40,10,'+(.25*a.shake)+')'; ctx.beginPath(); ctx.arc(a.x, a.y, 2.2, 0, 7); ctx.fill(); }   // след в стене
+        const gr = ctx.createRadialGradient(q.x-1,q.y-1,0,q.x,q.y,4.5); gr.addColorStop(0,'#fff6d5'); gr.addColorStop(.5, a.on ? '#d4a944' : '#b89645'); gr.addColorStop(1,'#7a5a17');
+        ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(q.x,q.y,4.2,0,7); ctx.fill();
+      }
       // лампочки
       bulbs.forEach((b,i) => {
-        const q = P[b.k], [lit, off] = COLS[b.c], v = Math.min(1, bright(b,i,t) + b.flash), r = 5.2;
+        const q = P[b.k], [lit, off] = COLS[b.c], v = fallT > 0 ? .08 : Math.min(1, bright(b,i,t) + b.flash), r = 5.2;
         ctx.save(); ctx.translate(q.x, q.y); ctx.rotate(b.a);
         // свечение
         ctx.globalCompositeOperation = dark ? 'lighter' : 'source-over';
@@ -1034,8 +1111,10 @@
         ctx.restore();
       });
       // искры
-      for (const s3 of sparks){ ctx.globalAlpha = Math.max(0, s3.life*1.6); ctx.fillStyle = s3.c; ctx.beginPath(); ctx.arc(s3.x, s3.y, 1.6, 0, 7); ctx.fill(); }
+      for (const s3 of sparks){ ctx.globalAlpha = Math.max(0, s3.life*1.6); ctx.fillStyle = s3.c; ctx.beginPath(); ctx.arc(s3.x, s3.y, s3.r || 1.6, 0, 7); ctx.fill(); }
       ctx.globalAlpha = 1;
+      if (curH === CH){ const fy = CH - 90, fg = ctx.createLinearGradient(0, fy, 0, CH); fg.addColorStop(0,'rgba(0,0,0,0)'); fg.addColorStop(1,'rgba(0,0,0,1)');
+        ctx.globalCompositeOperation = 'destination-out'; ctx.fillStyle = fg; ctx.fillRect(-PX, fy, W+2*PX, 90); ctx.globalCompositeOperation = 'source-over'; }
     }
     function loop(now){
       if (!P.length) build();
@@ -1044,31 +1123,33 @@
       step(dt); draw(); requestAnimationFrame(loop);
     }
     // ---- взаимодействие ----
-    const local = (e) => { const r = cv.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; };
+    const local = (e) => { const r = box.getBoundingClientRect(); return { x:e.clientX - r.left, y:e.clientY - r.top }; };
     const bulbPos = (b) => { const q = P[b.k]; return { x:q.x - Math.sin(b.a)*10, y:q.y + Math.cos(b.a)*10 }; };
     function burst(b){
       const p = bulbPos(b), c = COLS[b.c][0];
       for (let i=0;i<14;i++){ const a = Math.random()*6.28, v = 60+Math.random()*120; sparks.push({ x:p.x, y:p.y, vx:Math.cos(a)*v, vy:Math.sin(a)*v-60, life:.6+Math.random()*.4, c }); }
     }
-    cv.addEventListener('pointerdown', e => {
-      if (!W) return; const m = local(e), now = Date.now();
+    box.addEventListener('pointerdown', e => {
+      if (!W || fallT > 0) return; const m = local(e), now = Date.now();
       if (now - lastTap < 320){ party = 2.6; haptic([10,30,10,30,10]); lastTap = 0; return; }   // двойной тап — праздник
       lastTap = now;
       let hit = null, hd = 22; bulbs.forEach(b => { const p = bulbPos(b), d = Math.hypot(p.x-m.x, p.y-m.y); if (d < hd){ hd = d; hit = b; } });
       if (hit){ hit.flash = 1; hit.c = (hit.c+1) % COLS.length; hit.av += (Math.random()-.5)*14; burst(hit); haptic(12); }
-      let k = -1, kd = 30; P.forEach((q,i) => { if (pins.includes(i)) return; const d = Math.hypot(q.x-m.x, q.y-m.y); if (d < kd){ kd = d; k = i; } });
-      if (k >= 0){ grab = { k, x:m.x, y:m.y }; try { cv.setPointerCapture(e.pointerId); } catch {} }
+      // берём провод в точке прямо под пальцем (по горизонтали), а не в ближайшей по диагонали — иначе он рывком съезжает в сторону
+      let k = -1, kd = 1e9; P.forEach((q,i) => { if (pins.includes(i) || Math.abs(q.y-m.y) > 34) return; const d = Math.abs(q.x-m.x) + .25*Math.abs(q.y-m.y); if (d < kd){ kd = d; k = i; } });
+      if (k >= 0 && Math.abs(P[k].x - m.x) > 20) k = -1;
+      if (k >= 0){ grab = { k, x:m.x, y:m.y, x0:P[k].x, y0:P[k].y }; gPrev = null; try { box.setPointerCapture(e.pointerId); } catch {} }
     });
-    cv.addEventListener('pointermove', e => {
+    box.addEventListener('pointermove', e => {
       const m = local(e);
       if (grab){ grab.x = Math.max(4, Math.min(W-4, m.x)); grab.y = Math.max(TOPY, m.y); return; }
       if (e.pointerType === 'mouse'){ P.forEach((q,i) => { if (pins.includes(i)) return; const d = Math.hypot(q.x-m.x, q.y-m.y); if (d < 18){ q.px -= e.movementX*.25; q.py -= e.movementY*.25; } }); }   // «струна» под курсором
     });
     const release = () => { if (grab){ haptic(6); grab = null; } };
-    cv.addEventListener('pointerup', release); cv.addEventListener('pointercancel', release); cv.addEventListener('lostpointercapture', release);
+    box.addEventListener('pointerup', release); box.addEventListener('pointercancel', release); box.addEventListener('lostpointercapture', release);
     // толчок снизу — когда подпрыгивает буква
     function poke(clientX, s=1){
-      if (!W) return; const r = cv.getBoundingClientRect(), x = clientX - r.left;
+      if (!W) return; const r = box.getBoundingClientRect(), x = clientX - r.left;
       P.forEach((q,i) => { if (pins.includes(i)) return; const d = Math.abs(q.x - x); if (d < 60){ q.py += (1 - d/60) * 7 * s; } });
       let best = null, bd = 1e9; bulbs.forEach(b => { const d = Math.abs(P[b.k].x - x); if (d < bd){ bd = d; best = b; } });
       if (best && bd < 40) best.flash = Math.max(best.flash, .8);
